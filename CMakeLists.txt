@@ -5,4 +5,11 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_CXX_FLAGS -fopenmp)
 
-add_executable(raytracing main.cc image.cc type.cc objects.cc light.cc camera.cc scene.cc)
+add_executable(raytracing
+    src/main.cc
+    src/image.cc
+    src/type.cc
+    src/object.cc
+    src/camera.cc
+    src/scene.cc
+    src/light.cc)
