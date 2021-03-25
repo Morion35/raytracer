@@ -60,7 +60,7 @@ namespace raytracing {
 
         color operator*(double l) const { return color(*this) *= l; };
 
-        color operator*(const color& c) {
+        color operator*(const color& c) const {
             return color((r * c.r) / 255., (g * c.b / 255.), (b * c.b / 255.));
         }
 

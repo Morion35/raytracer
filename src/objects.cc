@@ -130,7 +130,9 @@ std::optional<vec3> SmoothTriangle::norm(const p3 &p) const {
 }
 
 std::optional<vec3> Cylinder::norm(const p3 &p) const {
-    auto diag = p - c1_;
+    return std::optional<vec3>();
+}
 
-
+std::optional<p3> Cylinder::intersect(const p3 &, const vec3 &) const noexcept {
+    return std::optional<p3>();
 }
