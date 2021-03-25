@@ -9,7 +9,7 @@ add_executable(raytracing
     src/main.cc
     src/image.cc
     src/type.cc
-    src/object.cc
+    src/objects.cc
     src/camera.cc
     src/scene.cc
     src/light.cc)
