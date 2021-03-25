@@ -128,3 +128,9 @@ std::optional<vec3> SmoothTriangle::norm(const p3 &p) const {
     const auto norm = n1_ * (1 - u - v) + n2_ * u + n3_ * v;
     return norm.normalize();
 }
+
+std::optional<vec3> Cylinder::norm(const p3 &p) const {
+    auto diag = p - c1_;
+
+
+}

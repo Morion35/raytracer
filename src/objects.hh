@@ -98,7 +98,6 @@ namespace raytracing {
     };
 
     class SmoothTriangle : public Triangle {
-
     public:
         SmoothTriangle(const p3& c1, const p3& c2, const p3& c3, const vec3& n1, const vec3& n2, const vec3& n3, std::shared_ptr<Texture_Material> texture) :
                 Triangle(c1, c2, c3, std::move(texture)), n1_(n1.normalize()), n2_(n2.normalize()), n3_(n3.normalize()) {};
@@ -111,6 +110,21 @@ namespace raytracing {
         vec3 n3_;
 
     };
+
+
+    class Cylinder : public Object {
+    public:
+        Cylinder(double r, const p3& c1, const p3& c2) : r_(r), c1_(c1), c2_(c2) {};
+
+        std::optional<vec3> norm(const p3&) const override;
+
+        std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
+    private:
+        double r_;
+        p3 c1_;
+        p3 c2_;
+    };
+
 
 
     class Blob {

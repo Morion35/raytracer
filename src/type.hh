@@ -136,7 +136,7 @@ namespace raytracing {
 
         constexpr p3 p() const;
 
-        inline double norm() const { return std::sqrt(square()); }
+        constexpr double norm() const { return std::sqrt(square()); }
 
         inline vec3 normalize() const { return *this / norm(); };
 
@@ -160,7 +160,7 @@ namespace raytracing {
         constexpr p3(double i, double j, double k) : x(i), y(j), z(k) {};
         p3() = default;
 
-        constexpr double dist(const p3& p) const {
+        inline double dist(const p3& p) const {
             return (p - *this).norm();
         }
 
