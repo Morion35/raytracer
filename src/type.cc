@@ -27,6 +27,6 @@ vec3 vec3::operator-(const p3 &p) const {
     return vec3(this->u - p.x, this->v - p.y, this->w - p.z);
 }
 
-constexpr p3 vec3::p() const {
+p3 vec3::p() const {
     return p3(u, v, w);
 }

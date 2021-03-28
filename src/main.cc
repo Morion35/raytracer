@@ -35,27 +35,27 @@ int main()
     objects.push_back(wall);
     objects.push_back(floor);
 
-    auto ball = std::make_shared<Sphere>(p3(-10, 20, 80), 30., Uniform_Material(1, 1, 1.6, color(255, 255, 255)));
-    auto ball2 = std::make_shared<Sphere>(p3(5, -10, 30), 5., Uniform_Material(0.8, 0.3, 0.5, color(250, 80, 0)));
+    auto ball = std::make_shared<Sphere>(p3(-10, 20, 80), 30., std::make_shared<Uniform_Material>(1, 1, 1.6, color(255, 255, 255)));
+    auto ball2 = std::make_shared<Sphere>(p3(5, -10, 30), 5., std::make_shared<Uniform_Material>(0.8, 0.3, 0.5, color(250, 80, 0)));
 
-    objects.push_back(ball);
-    objects.push_back(ball2);
+    //objects.push_back(ball);
+    //objects.push_back(ball2);
 
+
+    auto box = std::make_shared<Box>(p3(10, -10, 30), 10., std::make_shared<Uniform_Material>(0.8, 0.3, 0.5, color(0, 180, 0)));
     //auto triangle1 = std::make_shared<Triangle>(p3(0, -15, 25), p3(-10, 0, 25), p3(10, 0, 25), std::make_shared<Uniform_Material>(1, 0.3, 0.8, color(255, 0, 100)));
 
-    //objects.push_back(triangle1);
+    objects.push_back(box);
 
-    std::vector<Blob> blobs;
+    auto blob = std::make_shared<Blob>(14, 0.2, 0.1, p3(0, -10, 20), std::vector<p3>({p3(-4, -10, 20), p3(4, -10, 20)}), std::make_shared<Uniform_Material>(1, 0.8, 1.3, color(250, 250, 250)));
 
-    auto blob = Blob(14, 0.2, 0.1, p3(0, -5, 20), std::vector<p3>({p3(-4, -5, 20), p3(4, -5, 20)}), std::make_shared<Uniform_Material>(1, 0.8, 1.3, color(250, 250, 250)));
-
-    //blobs.push_back(blob);
+    //objects.push_back(blob);
 
 
-    auto camera = Camera(p3(0, 0, 0), p3(1, 2, 10), vec3(0, 1, 0), M_PI_4 * 1, M_PI_4 * 1,5);
-    auto scene = Scene(objects, lights, camera, blobs);
+    auto camera = Camera(p3(0, 0, 0), p3(0, 0, 10), vec3(0, 1, 0), M_PI_4 * 1, M_PI_4 * 1,5);
+    auto scene = Scene(objects, lights, camera);
 
-    auto image = scene.compute_image(512, 512, 1, true, true);
+    auto image = scene.compute_image(512, 512, 1, true, false);
     std::cout << "Width: " << image.width() << "\n";
     std::cout << "Height: " << image.height() << "\n";
 

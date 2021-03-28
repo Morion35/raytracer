@@ -9,9 +9,7 @@
 std::vector<std::vector<std::vector<raytracing::vec3>>> raytracing::Camera::get_rays(unsigned short width, unsigned short height, bool aliasing) const {
     auto n = (P_ - C_).normalize();
     auto right = sky_.cross(n).normalize();
-    std::cout << right;
     auto up = n.cross(right).normalize();
-    std::cout << up;
     auto x = vec3(right.u, up.u, n.u);
     auto y = vec3(right.v, up.v, n.v);
     auto z = vec3(right.w, up.w, n.w);

@@ -134,7 +134,7 @@ namespace raytracing {
 
         constexpr vec3 operator-(double f) const { return vec3(u - f, v - f, w - f); };
 
-        constexpr p3 p() const;
+        p3 p() const;
 
         constexpr double norm() const { return std::sqrt(square()); }
 
