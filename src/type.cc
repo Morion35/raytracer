@@ -19,11 +19,11 @@ vec3 operator*(double f, const vec3& v) {
     return v * f;
 }
 
-constexpr vec3 vec3::operator+(const p3 &p) const {
+vec3 vec3::operator+(const p3 &p) const {
     return vec3(this->u + p.x, this->v + p.y, this->w + p.z);
 }
 
-constexpr vec3 vec3::operator-(const p3 &p) const {
+vec3 vec3::operator-(const p3 &p) const {
     return vec3(this->u - p.x, this->v - p.y, this->w - p.z);
 }
 

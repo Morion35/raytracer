@@ -23,7 +23,7 @@ namespace raytracing {
                                                                                          blobs_(std::move(blobs)) {};
         explicit Scene(Camera camera) : camera_(camera) {};
 
-        Image compute_image(unsigned short width, unsigned short height, unsigned compute_depth, bool smooth = false);
+        Image compute_image(unsigned short width, unsigned short height, unsigned compute_depth, bool smooth = false, bool aliasing = false);
 
     private:
 

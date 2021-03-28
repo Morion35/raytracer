@@ -6,11 +6,11 @@
 #include "iostream"
 #include <omp.h>
 
-raytracing::Image raytracing::Scene::compute_image(const unsigned short width, const unsigned short height, const unsigned compute_depth = 0, bool smooth) {
+raytracing::Image raytracing::Scene::compute_image(const unsigned short width, const unsigned short height, const unsigned compute_depth = 0, bool smooth, bool aliasing) {
 
     compute_blobs(smooth);
 
-    const auto rays = camera_.get_rays(width, height);
+    const auto rays = camera_.get_rays(width, height, aliasing);
 
     Image image(width, height);
     const p3 s = camera_.source();
@@ -19,10 +19,16 @@ raytracing::Image raytracing::Scene::compute_image(const unsigned short width, c
 #pragma omp parallel for
     for (unsigned i = 0; i < height; ++i) {
         for (unsigned j = 0; j < width; ++j) {
-            const auto& ray = rays[i][j];
-
-            auto res = compute_ray(s, ray, compute_depth);
-            image.set_pixel(i, j, res.value_or(color()));
+            const auto& pixel_rays = rays[i][j];
+            unsigned r = 0, g = 0, b = 0;
+            unsigned n = pixel_rays.size();
+            for (const auto& ray : pixel_rays) {
+                auto res = compute_ray(s, ray, compute_depth).value_or(color());
+                r += res.r;
+                g += res.g;
+                b += res.b;
+            }
+            image.set_pixel(i, j, color(r / n, g / n, b / n));
         }
 #pragma atomic
         ++count;

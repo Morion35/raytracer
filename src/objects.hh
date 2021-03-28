@@ -111,6 +111,9 @@ namespace raytracing {
 
     };
 
+    class Cube : public Object {
+        Cube(const p3& center, double edge) {};
+    };
 
     class Cylinder : public Object {
     public:
@@ -155,6 +158,7 @@ namespace raytracing {
         double d_;
         double t_;
     };
+
 }
 
 #define RAYTRACING_OBJECTS_HH

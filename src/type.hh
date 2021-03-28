@@ -117,9 +117,9 @@ namespace raytracing {
 
         constexpr vec3 operator+(const vec3 &vec) const { return vec3(*this) += vec; }
 
-        constexpr vec3 operator+(const p3 &p) const;
+        vec3 operator+(const p3 &p) const;
 
-        constexpr vec3 operator-(const p3 &p) const;
+        vec3 operator-(const p3 &p) const;
         constexpr double square() const { return *this * *this; }
 
         constexpr vec3 cross(const vec3& rhs) const {
