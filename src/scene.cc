@@ -8,23 +8,25 @@
 
 raytracing::Image raytracing::Scene::compute_image(const unsigned short width, const unsigned short height, const unsigned compute_depth, bool aliasing) {
 
-    const auto rays = camera_.get_rays(width, height, aliasing);
+    const auto pixels = camera_.get_pixels(width, height, aliasing);
 
     Image image(width, height);
-    const p3 s = camera_.source();
+    const auto sources = camera_.source();
     unsigned count = 0;
 
 #pragma omp parallel for
     for (unsigned i = 0; i < height; ++i) {
         for (unsigned j = 0; j < width; ++j) {
-            const auto& pixel_rays = rays[i][j];
+            const auto& pixel = pixels[i][j];
             unsigned r = 0, g = 0, b = 0;
-            unsigned n = pixel_rays.size();
-            for (const auto& ray : pixel_rays) {
-                auto res = compute_ray(s, ray, compute_depth).value_or(color());
-                r += res.r;
-                g += res.g;
-                b += res.b;
+            unsigned n = pixel.size() * sources.size();
+            for (const auto& dst : pixel) {
+                for (const auto& src : sources) {
+                    auto res = compute_ray(src, dst - src, compute_depth).value_or(color());
+                    r += res.r;
+                    g += res.g;
+                    b += res.b;
+                }
             }
             image.set_pixel(i, j, color(r / n, g / n, b / n));
         }

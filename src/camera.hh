@@ -13,19 +13,29 @@ namespace raytracing {
     class Camera {
     public:
 
-        Camera(p3 origin, p3 vue, vec3 sky, double ax, double ay, double dz) : C_(origin), P_(vue), sky_(sky), ax_(ax), ay_(ay), dz_(dz) {};
+        Camera(p3 origin, p3 viewpoint, vec3 sky, double ax, double ay, double dz, double e = 0.3, double d = 0.1);
 
-        std::vector<std::vector<std::vector<vec3>>> get_rays(unsigned short width, unsigned short height, bool aliasing = false) const;
+        std::vector<std::vector<std::vector<p3>>> get_pixels(unsigned short width, unsigned short height, bool aliasing = false) const;
 
-        p3 source() const { return C_; }
+        std::vector<p3> source() const { return sources_; };
 
     private:
+        vec3 transform(const vec3& v) const { return vec3(x_.dot(v), y_.dot(v), z_.dot(v)); }
         p3 C_;
         p3 P_;
+        std::vector<p3> sources_;
         vec3 sky_;
         double ax_;
         double ay_;
         double dz_;
+        double e_;
+        double d_;
+        vec3 n_;
+        vec3 right_;
+        vec3 up_;
+        vec3 x_;
+        vec3 y_;
+        vec3 z_;
     };
 }
 

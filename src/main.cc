@@ -39,7 +39,7 @@ int main()
     objects.push_back(floor);
 
     auto ball = std::make_shared<Sphere>(p3(-10, 10, 80), 20., std::make_shared<Uniform_Material>(1, .7, 10, color(100, 100, 100)));
-    auto ball2 = std::make_shared<Sphere>(p3(12, -10, 40), 5., std::make_shared<Uniform_Material>(0.8, 0.3, 0.5, color(250, 80, 0)));
+    auto ball2 = std::make_shared<Sphere>(p3(0, 0, 20), 5., std::make_shared<Uniform_Material>(0.8, 0.3, 0.5, color(250, 80, 0)));
     auto sky = std::make_shared<Sphere>(p3(0, 0, 0), 500., std::make_shared<Uniform_Material>(1, 0, 0, color(30, 120, 180)));
 
     objects.push_back(ball);
@@ -55,7 +55,7 @@ int main()
 
     //objects.push_back(blob);
 
-    auto camera = Camera(p3(0, 0, 0), p3(-10, 0, 80), vec3(0, 1, 0), M_PI_4 * 1, M_PI_4 * 1,10);
+    auto camera = Camera(p3(0, 0, 0), p3(0, 0, 15), vec3(0, 1, 0), M_PI_4 * 1, M_PI_4 * 1,15, 1, 0.2);
     auto scene = Scene(objects, lights, camera);
 
     auto image = scene.compute_image(1024, 1024, 0, false);
