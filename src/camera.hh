@@ -4,6 +4,8 @@
 
 #ifndef RAYTRACING_CAMERA_HH
 
+#define RAYTRACING_CAMERA_HH
+
 #include "type.hh"
 #include <vector>
 
@@ -27,6 +29,5 @@ namespace raytracing {
     };
 }
 
-#define RAYTRACING_CAMERA_HH
 
 #endif //RAYTRACING_CAMERA_HH

@@ -4,6 +4,8 @@
 
 #ifndef RAYTRACING_MATERIALS_HH
 
+#define RAYTRACING_MATERIALS_HH
+
 #include "type.hh"
 #include <tuple>
 namespace raytracing {
@@ -32,6 +34,5 @@ namespace raytracing {
     };
 }
 
-#define RAYTRACING_MATERIALS_HH
 
 #endif //RAYTRACING_MATERIALS_HH

@@ -3,3 +3,7 @@
 //
 
 #include "light.hh"
+
+double raytracing::Point_Light::intensity(const raytracing::p3 &p, const raytracing::SceneType &scene) const {
+
+}

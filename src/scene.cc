@@ -6,7 +6,7 @@
 #include "iostream"
 #include <omp.h>
 
-raytracing::Image raytracing::Scene::compute_image(const unsigned short width, const unsigned short height, const unsigned compute_depth = 0, bool smooth, bool aliasing) {
+raytracing::Image raytracing::Scene::compute_image(const unsigned short width, const unsigned short height, const unsigned compute_depth, bool aliasing) {
 
     const auto rays = camera_.get_rays(width, height, aliasing);
 
@@ -66,13 +66,13 @@ std::optional<raytracing::color> raytracing::Scene::compute_ray(const raytracing
 
             if (LN >= 0) {
                 auto SL = S * L;
-                res += c * light->intensity(cp) * Kd * LN;
+                res += c * light->intensity(cp, *this) * Kd * LN;
                 if (SL >= 0)
-                    res += color(255, 255, 255) * light->intensity(cp) * Ks * std::pow(SL, ns);
+                    res += color(255, 255, 255) * light->intensity(cp, *this) * Ks * std::pow(SL, ns);
             }
         }
 
-        if (count > 0 && !hidden) {
+        if (count > 0) {
             auto reflect = compute_ray(cp, S, count - 1);
             if (reflect) {
                 auto ref = reflect.value();

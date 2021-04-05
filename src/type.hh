@@ -8,6 +8,7 @@
 
 #include <ostream>
 #include <cmath>
+#include <optional>
 
 namespace raytracing {
 
@@ -204,6 +205,7 @@ namespace raytracing {
         }
 
     };
+
 }
 
 std::ostream &operator<<(std::ostream &out, const raytracing::color &c);

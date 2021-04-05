@@ -4,6 +4,8 @@
 
 #ifndef RAYTRACING_OBJECTS_HH
 
+#define RAYTRACING_OBJECTS_HH
+
 #include "type.hh"
 #include "materials.hh"
 #include <optional>
@@ -450,6 +452,5 @@ const int SQUARE_MAP[256][15] = {
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
 };
 
-#define RAYTRACING_OBJECTS_HH
 
 #endif //RAYTRACING_OBJECTS_HH

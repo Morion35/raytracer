@@ -234,10 +234,9 @@ void Blob::initialize() {
                 }
                 p.y += d;
             }
-            std::cout << "Row: " << i << " finished for cube marching\n";
             p.x += d;
         }
-
+        std::cout << "Finished Blob initialization\n";
     }
 }
 
@@ -255,9 +254,6 @@ vec3 Blob::smooth_norm(const p3 &p) const {
         }
         norm += n / dist;
         potential += 1.0 / dist;
-    }
-    if (maxpotential >= t_) {
-        return maxnorm.normalize();
     }
     norm /= potential;
     return norm.normalize();

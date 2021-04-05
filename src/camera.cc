@@ -21,9 +21,12 @@ std::vector<std::vector<std::vector<raytracing::vec3>>> raytracing::Camera::get_
     dx = vec3(x.dot(dx), y.dot(dx), z.dot(dx));
     dy = vec3(x.dot(dy), y.dot(dy), z.dot(dy));
 
-    vec3 begin = vec3(P_.x - plane_width / 2., P_.y + plane_height / 2., dz_);
+    vec3 begin = vec3(-plane_width / 2., plane_height / 2., dz_);
     begin = vec3(x.dot(begin), y.dot(begin), z.dot(begin));
-    begin = begin + dx - dy - C_;
+    begin = begin + dx - dy;
+    std::cout << begin << "\n";
+    std::cout << dx << "\n";
+    std::cout << dy;
     std::vector<std::vector<std::vector<vec3>>> rays(height, std::vector<std::vector<vec3>>(width));
     for (unsigned short i = 0; i < height; ++i) {
         for (unsigned short j = 0; j < width; ++j) {
