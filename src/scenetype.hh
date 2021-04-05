@@ -8,6 +8,9 @@
 
 #include "image.hh"
 
+#include <optional>
+#include <tuple>
+
 namespace raytracing {
     class SceneType {
     public:

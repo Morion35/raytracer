@@ -44,31 +44,29 @@ std::optional<raytracing::color> raytracing::Scene::compute_ray(const raytracing
     if (hit) {
         auto [cp, n, Kd, Ks, ns, c] = hit.value();
         auto O = (cp - s).normalize();
+
         if (n * O < 0) {
             n = -n;
         }
+
         auto res = c * 0.05;
         auto S = O - 2 * (O * n) * n;
-        auto hidden = true;
 
         for (const auto &light : lights_) {
-            auto hidden_from_light = cast_ray(light->position(), (cp - light->position()));
-            if (hidden_from_light) {
-                p3 cpu = std::get<0>(hidden_from_light.value());
-                if ((cpu - cp).square() > 0.0001 && (cpu - cp).square() <= (cp - light->position()).square())
-                    continue;
-                else
-                    hidden = false;
-            } else
-                hidden = false;
+            auto i = light->intensity(cp, *this);
+
+            if (i == 0)
+                continue;
+
             auto L = (light->position() - cp).normalize();
             auto LN = std::abs(n * L);
 
             if (LN >= 0) {
                 auto SL = S * L;
-                res += c * light->intensity(cp, *this) * Kd * LN;
+
+                res += c * i * Kd * LN;
                 if (SL >= 0)
-                    res += color(255, 255, 255) * light->intensity(cp, *this) * Ks * std::pow(SL, ns);
+                    res += color(255, 255, 255) * i * Ks * std::pow(SL, ns);
             }
         }
 

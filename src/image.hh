@@ -9,7 +9,7 @@
 #include "type.hh"
 #include <vector>
 #include <string>
-#include <jpeglib.h>
+// #include <jpeglib.h>
 
 namespace raytracing {
 

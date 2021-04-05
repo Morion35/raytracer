@@ -31,6 +31,19 @@ namespace raytracing {
     };
 
     class Square_Light : public Light {
+    public:
+
+        Square_Light(raytracing::p3 p, double d, unsigned char step, double I) : center_(p), d_(d), step_(step), I_(I) { };
+
+        p3 position() const override { return center_; }
+        double intensity(const p3& p, const SceneType&) const override;
+
+    private:
+        p3 center_;
+        double d_;
+        unsigned char step_;
+
+        double I_;
     };
 }
 

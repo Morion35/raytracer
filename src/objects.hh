@@ -150,7 +150,6 @@ namespace raytracing {
         double e_;
     };
 
-
     class Blob : public Object {
     public:
         Blob(double e, double d, double threshold, const p3& center, std::vector<p3> sources, std::shared_ptr<Texture_Material>&& texture) :

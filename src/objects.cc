@@ -28,14 +28,7 @@ std::optional<p3> Sphere::intersect(const p3& p, const vec3& v) const noexcept {
 }
 
 std::optional<std::tuple<float, float, float, color>> Sphere::texture(const p3 &p) const {
-
-    auto sqr = (p - center_).square();
-    if (sqr <= (r_ * r_ + 0.0001) && sqr >= (r_ * r_ - 0.0001)) {
-        return std::optional(material_->texture(p));
-    }
-
-    return std::nullopt;
-
+    return std::optional(material_->texture(p));
 }
 
 std::optional<std::tuple<float, float, float, color>> Plane::texture(const p3 &p) const {
@@ -43,7 +36,6 @@ std::optional<std::tuple<float, float, float, color>> Plane::texture(const p3 &p
 }
 
 std::optional<vec3> Sphere::norm(const p3& p) const {
-
     auto dist = (p - center_).normalize();
 
     return dist;
@@ -325,7 +317,6 @@ std::optional<p3> Box::intersect(const p3 &o, const vec3 &ray) const noexcept {
     }
     return std::nullopt;
 }
-
 
 std::optional<vec3> Box::norm(const p3 &p) const {
     double epsilon = 0.00001;
