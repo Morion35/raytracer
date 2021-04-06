@@ -22,7 +22,7 @@ int main()
     //lights.push_back(light);
     //lights.push_back(light2);
 
-    auto smooth_light = std::make_shared<Square_Light>(p3(0, 30, 40), 1, 3, 50, color(1., 1., 0.));
+    auto smooth_light = std::make_shared<Square_Light>(p3(0, 30, 40), 1, 3, 50, color(1., 1., 1.));
     auto smooth_light2 = std::make_shared<Square_Light>(p3(0, -10, 50), 1, 3, 20);
     lights.push_back(smooth_light);
     //lights.push_back(smooth_light2);
@@ -33,13 +33,13 @@ int main()
     // objects.push_back(mirror);
     // objects.push_back(mirror2);
 
-    auto wall = std::make_shared<Plane>(vec3(0, 0, -1), p3(0, 0, 42), std::make_shared<Uniform_Material>(color(255, 0, 0), 0.8, 0.2, 0.8, 1, 1));
-    auto floor = std::make_shared<Plane>(vec3(0, 1, 0), p3(0, -15, 0), std::make_shared<Uniform_Material>(color(252, 184,136), 1, 0.0, .8));
-    //objects.push_back(wall);
+    auto wall = std::make_shared<Plane>(vec3(0, 0, -1), p3(0, 0, 35), std::make_shared<Z_Paved_Material>(color(255, 255,255), color(60, 20,10),1 , .1, 0.0, .8, .9, 1.5));
+    auto floor = std::make_shared<Plane>(vec3(0, 1, 0), p3(0, -15, 0), std::make_shared<Z_Paved_Material>(color(255, 255,255), color(60, 20,10),1 , 1, 0.0, .8, 0));
+    objects.push_back(wall);
     objects.push_back(floor);
 
     auto ball = std::make_shared<Sphere>(p3(-10, 10, 80), 20., std::make_shared<Uniform_Material>(color(100, 100, 100), .2, .8, 3));
-    auto ball2 = std::make_shared<Sphere>(p3(0, 0, 30), 6., std::make_shared<Uniform_Material>(color(0, 0, 0), 0.1, .9, 9.9, 1, 1.5));
+    auto ball2 = std::make_shared<Sphere>(p3(0, 0, 30), 5., std::make_shared<Uniform_Material>(color(0, 0, 0), 0.1, .9, 9.9, 1, 1.5));
     auto bulb = std::make_shared<Sphere>(p3(0, 30, 40), 3., std::make_shared<Uniform_Material>(color(1., 1., 1.), 0.0, 1.0, 1, 1, 1.5));
     auto sky = std::make_shared<Sphere>(p3(0, 0, 0), 500., std::make_shared<Uniform_Material>(color(30, 120, 180)));
 
@@ -48,7 +48,7 @@ int main()
     objects.push_back(bulb);
     objects.push_back(sky);
 
-    auto box = std::make_shared<Box>(p3(-15, -9.9, 30), 10., std::make_shared<Uniform_Material>(color(0, 180, 180), 0.5, 0., 0.3, 0.5, 1.0));
+    auto box = std::make_shared<Box>(p3(-15, -9.9, 30), 10., std::make_shared<Uniform_Material>(color(0, 180, 180), 1, 0., 0.3, 0.0, 1.0));
     //auto triangle1 = std::make_shared<Triangle>(p3(0, -15, 25), p3(-10, 0, 25), p3(10, 0, 25), std::make_shared<Uniform_Material>(color(255, 0, 100), 1, 0.3, 0.8));
 
     objects.push_back(box);
