@@ -4,20 +4,22 @@
 
 #include "light.hh"
 
-double raytracing::Point_Light::intensity(const raytracing::p3 &p, const raytracing::SceneType &scene) const {
-    auto ray = p - p_;
-    auto hidden_from_light = scene.cast_ray(p_, (ray));
+raytracing::color raytracing::Point_Light::intensity(const raytracing::p3 &p, const raytracing::SceneType &scene) const {
+    auto hidden_from_light = scene.light_passing_objects(p_, p);
 
-    if (hidden_from_light) {
-        p3 cpu = std::get<0>(hidden_from_light.value());
-        if ((cpu - p).square() >= .00001 && (cpu - p).square() <= (ray).square())
-            return 0;
+    auto intensity = c_;
+    if (!hidden_from_light.empty()) {
+        for (auto [c, Ks] : hidden_from_light) {
+            if (!Ks) {
+                return color();
+            }
+            intensity *= c * Ks;
+        }
     }
-
-    return I_ / p.dist(p_);
+    return (intensity / p.dist(p_)) * I_;
 }
 
-double raytracing::Square_Light::intensity(const raytracing::p3 &p, const raytracing::SceneType &scene) const {
+raytracing::color raytracing::Square_Light::intensity(const raytracing::p3 &p, const raytracing::SceneType &scene) const {
     vec3 sky(0, 1, 0);
 
     auto ray = center_ - p;
@@ -39,22 +41,28 @@ double raytracing::Square_Light::intensity(const raytracing::p3 &p, const raytra
     begin = vec3(x.dot(begin), y.dot(begin), z.dot(begin));
     begin = begin + dx / 2 - dy / 2 + center_;
 
-    double count = 0;
+    double r = 0, g = 0, b = 0;
     for (unsigned short i = 0; i < step_; ++i) {
         for (unsigned short j = 0; j < step_; ++j) {
             auto center_ray = (begin + (dx * j) - (dy * i)).p();
-            auto hidden_from_light = scene.cast_ray(center_ray, p - center_ray);
+            auto hidden_from_light = scene.light_passing_objects(center_ray, p);
+            auto intensity = c_;
 
-            if (hidden_from_light) {
-                p3 hit = std::get<0>(hidden_from_light.value());
-                if ((hit - p).square() >= .00001 && (hit - p).square() <= (p - center_ray).square()) {
+            if (!hidden_from_light.empty()) {
+                if (std::get<1>(hidden_from_light.front()) == 1) {
                     continue;
                 }
+                for (auto [c, Kd] : hidden_from_light) {
+                    intensity -= color(1., 1., 1.) * Kd + (color(1., 1., 1.) - c) * Kd;
+                }
             }
-
-            count++;
+            intensity = (intensity / center_ray.dist(p)) * I_;
+            r += intensity.r;
+            g += intensity.g;
+            b += intensity.b;
         }
     }
 
-    return (count / (step_ * step_)) * I_ / ray_dist;
+    unsigned size = step_ * step_;
+    return color(r / size, g / size, b / size);
 }

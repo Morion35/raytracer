@@ -21,11 +21,11 @@ namespace raytracing {
         virtual std::optional<p3> intersect(const p3&, const vec3&) const noexcept = 0;
         virtual std::optional<vec3> norm(const p3&) const = 0;
 
-        virtual std::optional<std::tuple<p3, std::shared_ptr<const Object>>> hit(const p3& p, const vec3& v) const noexcept {
+        virtual std::optional<std::tuple<p3, const Object*>> hit(const p3& p, const vec3& v) const noexcept {
             auto hit = intersect(p, v);
             if (hit) {
                 auto hitp = hit.value();
-                return std::tuple(hitp, std::shared_ptr<const Object>(this));
+                return std::tuple(hitp, this);
             }
             return std::nullopt;
         };
@@ -162,7 +162,7 @@ namespace raytracing {
             initialize();
         };
 
-        std::optional<std::tuple<p3, std::shared_ptr<const Object>>> hit(const p3& p, const vec3& v) const noexcept override;
+        std::optional<std::tuple<p3, const Object*>> hit(const p3& p, const vec3& v) const noexcept override;
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
         std::optional<texture_values> texture(const p3& p) const override { return texture_->texture(p); };
         std::optional<vec3> norm(const p3& p) const override;

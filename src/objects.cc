@@ -20,9 +20,9 @@ std::optional<p3> Sphere::intersect(const p3& p, const vec3& v) const noexcept {
     }
     double t1 = (-b - std::sqrt(d)) / (2 * a);
     double t2 = (-b + std::sqrt(d)) / (2 * a);
-    if (t1 >= 0 && t1 < t2)
+    if (t1 >= 0.00001 && t1 < t2)
         return std::optional(p + t1 * v);
-    if (t2 >= 0)
+    if (t2 >= 0.00001)
         return std::optional(p + t2 * v);
     return std::nullopt;
 }
@@ -279,36 +279,36 @@ std::optional<p3> Box::intersect(const p3 &o, const vec3 &ray) const noexcept {
     const auto min = c_ - e_ / 2;
     const auto max = c_ + e_ / 2;
     double tmin, tmax, tymin, tymax, tzmin, tzmax;
-    if (invray.u >= 0) {
+    if (invray.u >= 0.00001) {
         tmin = (min.x - o.x) * invray.u;
         tmax = (max.x - o.x) * invray.u;
     } else {
         tmin = (max.x - o.x) * invray.u;
         tmax = (min.x - o.x) * invray.u;
     }
-    if (invray.v >= 0) {
+    if (invray.v >= 0.00001) {
         tymin = (min.y - o.y) * invray.v;
         tymax = (max.y - o.y) * invray.v;
     } else {
         tymin = (max.y - o.y) * invray.v;
         tymax = (min.y - o.y) * invray.v;
     }
-    if ((tmin > tymax) || (tmax < tymin))
+    if ((tmin > tymax + 0.0001) || (tmax < tymin - 0.0001))
         return std::nullopt;
     if (tmin < tymin) tmin = tymin;
     if (tmax > tymax) tmax = tymax;
-    if (invray.w >= 0) {
+    if (invray.w >= 0.00001) {
         tzmin = (min.z - o.z) * invray.w;
         tzmax = (max.z - o.z) * invray.w;
     } else {
         tzmin = (max.z - o.z) * invray.w;
         tzmax = (min.z - o.z) * invray.w;
     }
-    if ((tmin > tzmax) || (tmax < tzmin))
+    if ((tmin > tzmax + 0.0001) || (tmax < tzmin - 0.0001))
         return std::nullopt;
     if (tmin < tzmin) tmin = tzmin;
     if (tmax > tzmax) tmax = tzmax;
-    if (tmin < 0) {
+    if (tmin < 0.00001) {
         if (tmax > 0.00001) {
             return o + tmax * ray;
         }
@@ -319,7 +319,7 @@ std::optional<p3> Box::intersect(const p3 &o, const vec3 &ray) const noexcept {
 }
 
 std::optional<vec3> Box::norm(const p3 &p) const {
-    double epsilon = 0.00001;
+    double epsilon = 0.0001;
     vec3 v = p - c_;
     v = vec3(v.u * v.u, v.v * v.v, v.w * v.w);
     double d2 = e_ * e_ / 4;
@@ -335,7 +335,7 @@ std::optional<vec3> Box::norm(const p3 &p) const {
     return std::nullopt;
 }
 
-std::optional<std::tuple<p3, std::shared_ptr<const Object>>> Blob::hit(const p3 &o, const vec3 &ray) const noexcept {
+std::optional<std::tuple<p3, const Object*>> Blob::hit(const p3 &o, const vec3 &ray) const noexcept {
     if (!box_.intersect(o, ray)) {
         return std::nullopt;
     }
@@ -358,7 +358,7 @@ std::optional<std::tuple<p3, std::shared_ptr<const Object>>> Blob::hit(const p3 
         }
 
         if (closest_point)
-            return std::tuple(closest_point.value(), closest_object);
+            return std::tuple(closest_point.value(), closest_object.get());
         return std::nullopt;
     }
 }

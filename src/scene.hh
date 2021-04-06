@@ -32,6 +32,8 @@ namespace raytracing {
         std::optional<color> compute_ray(const p3& source, const vec3& ray, unsigned) const override;
         std::optional<std::tuple<p3, vec3, float, float, float, float, float, color>> cast_ray(const p3& source, const vec3& ray) const override;
 
+        std::vector<std::tuple<color, double>> light_passing_objects(const p3& begin, const p3& end) const override;
+
     private:
 
         std::vector<std::shared_ptr<Object>> objects_;

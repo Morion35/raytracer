@@ -21,50 +21,65 @@ namespace raytracing {
     struct color {
         color() = default;
 
-        color(unsigned char red, unsigned char green, unsigned char blue) : r(red), g(green), b(blue) {};
-        unsigned char r = 0;
-        unsigned char g = 0;
-        unsigned char b = 0;
+        color(unsigned red, unsigned green, unsigned blue) : r(red / 255.), g(green / 255.), b(blue / 255.) {};
+        color(int red, int green, int blue) : r(red / 255.), g(green / 255.), b(blue / 255.) {};
+        color(unsigned char red, unsigned char green, unsigned char blue) : r(red / 255.), g(green / 255.), b(blue / 255.) {};
+        color(double red, double green, double blue) : r(red), g(green), b(blue) {};
+        color(float red, float green, float blue) : r(red), g(green), b(blue) {};
 
-        bool operator==(const color& c) const = default;
-        bool operator!=(const color& c) const = default;
+        double r = 0;
+        double g = 0;
+        double b = 0;
 
+        bool operator==(const color& c) const {return r == c.r && g == c.g && b == c.b; };
+        bool operator!=(const color& c) const {return !(*this == c); };
         color operator*=(double l) {
-
-            r = (r * l > 255) ? 255 : r * l;
-            g = (g * l > 255) ? 255 : g * l;
-            b = (b * l > 255) ? 255 : b * l;
+            r = std::clamp(r * l, 0., 1.);
+            g = std::clamp(g * l, 0., 1.);
+            b = std::clamp(b * l, 0., 1.);
             return *this;
         }
+
+        color operator/=(double l) {
+            r = std::clamp(r / l, 0., 1.);
+            g = std::clamp(g / l, 0., 1.);
+            b = std::clamp(b / l, 0., 1.);
+            return *this;
+        }
+
+        color operator/(double l) const { return color(*this) /= l; }
 
         color operator+=(const color& c) {
-            if (r + c.r > 255) {
-                r = 255;
-            } else {
-                r += c.r;
-            }
-
-            if (g + c.g > 255) {
-                g = 255;
-            } else {
-                g += c.g;
-            }
-            if (b + c.b > 255) {
-                b = 255;
-            } else {
-                b += c.b;
-            }
+            r = std::clamp(r + c.r, 0., 1.);
+            g = std::clamp(g + c.g, 0., 1.);
+            b = std::clamp(b + c.b, 0., 1.);
             return *this;
         }
+
+        color operator-=(const color& c) {
+            r = std::clamp(r - c.r, 0., 1.);
+            g = std::clamp(g - c.g, 0., 1.);
+            b = std::clamp(b - c.b, 0., 1.);
+            return *this;
+        }
+
+        color operator-(const color& c) const { return color(*this) -= c; }
 
         color operator+(const color& c) const { return color(*this) += c; }
 
         color operator*(double l) const { return color(*this) *= l; };
 
-        color operator*(const color& c) const {
-            return color((r * c.r) / 255., (g * c.b / 255.), (b * c.b / 255.));
+
+        color operator*=(const color& c) {
+            r *= c.r;
+            g *= c.g;
+            b *= c.b;
+            return *this;
         }
 
+        color operator*(const color& c) const {
+            return color(*this) *= c;
+        }
     };
 
     struct p3;

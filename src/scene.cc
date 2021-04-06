@@ -15,15 +15,15 @@ raytracing::Image raytracing::Scene::compute_image(const unsigned short width, c
     const auto sources = camera_.source();
     unsigned count = 0;
 
-#pragma omp parallel for
     for (unsigned i = 0; i < height; ++i) {
+//#pragma omp parallel for
         for (unsigned j = 0; j < width; ++j) {
             const auto& pixel = pixels[i][j];
-            unsigned r = 0, g = 0, b = 0;
+            double r = 0, g = 0, b = 0;
             unsigned n = pixel.size() * sources.size();
             for (const auto& dst : pixel) {
                 for (const auto& src : sources) {
-                    auto res = compute_ray(src, dst - src, compute_depth).value_or(color());
+                    auto res = compute_ray(src, (dst - src).normalize(), compute_depth).value_or(color());
                     r += res.r;
                     g += res.g;
                     b += res.b;
@@ -31,10 +31,8 @@ raytracing::Image raytracing::Scene::compute_image(const unsigned short width, c
             }
             image.set_pixel(i, j, color(r / n, g / n, b / n));
         }
-#pragma atomic
         ++count;
         if (count % (height/10) == 0) {
-#pragma critical
             std::cout << "completion: " << count * 100. / height << "%\n";
         }
     }
@@ -43,7 +41,7 @@ raytracing::Image raytracing::Scene::compute_image(const unsigned short width, c
 
 std::optional<raytracing::vec3> refract(const raytracing::vec3 &I, const raytracing::vec3 &N, const float &Kt)
 {
-    double cosi = std::clamp(-1., 1., I * N);
+    double cosi = I.normalize() * N.normalize();
     double etai = 1, etat = Kt;
     raytracing::vec3 n = N;
 
@@ -64,6 +62,24 @@ std::optional<raytracing::vec3> refract(const raytracing::vec3 &I, const raytrac
         return eta * I + (eta * cosi - std::sqrt(k)) * n;
 }
 
+double fresnel(const raytracing::vec3 &I, const raytracing::vec3 &N, float eta)
+{
+    double cosi = N.normalize() * I.normalize();
+    float etai = 1, etat = eta;
+    if (cosi > 0) { std::swap(etai, etat); }
+    double sint = etai / etat * std::sqrt(std::max(0., 1 - cosi * cosi));
+    if (sint >= 1) {
+        return 1;
+    }
+    else {
+        double cost = std::sqrt(std::max(0., 1 - sint * sint));
+        cosi = std::fabs(cosi);
+        double Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
+        double Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
+        return (Rs * Rs + Rp * Rp) / 2;
+    }
+}
+
 std::optional<raytracing::color> raytracing::Scene::compute_ray(const raytracing::p3 &s, const raytracing::vec3 &ray, unsigned count) const {
 
     auto hit = cast_ray(s, ray);
@@ -77,7 +93,7 @@ std::optional<raytracing::color> raytracing::Scene::compute_ray(const raytracing
         for (const auto &light : lights_) {
             auto i = light->intensity(cp, *this);
 
-            if (i == 0)
+            if (i == color())
                 continue;
 
             auto L = (light->position() - cp).normalize();
@@ -88,26 +104,35 @@ std::optional<raytracing::color> raytracing::Scene::compute_ray(const raytracing
 
                 res += c * i * Kd * LN;
                 if (SL >= 0)
-                    res += color(255, 255, 255) * i * Ks * std::pow(SL, ns);
+                    res += i * Ks * std::pow(SL, ns);
             }
         }
 
         if (count > 0) {
-            if (eta) {
-                auto T = refract(O, n, eta) ;
+            color reflected;
+            color refracted;
+            double Kr = 1;
+            if (Ks) {
+                auto ref = compute_ray(cp, S, count - 1);
+                if (ref) {
+                    reflected = ref.value();
+                }
+            }
+            if (Kt) {
+                auto T = refract(O, n, eta);
                 if (T) {
-                    auto refract = compute_ray(cp, T, count - 1);
+                    auto refract = compute_ray(cp, T.value(), count - 1);
                     if (refract) {
-                        auto refr = refract.value();
-                        res += refr * Kt;
+                        refracted = refract.value();
+                    }
+                    if (Ks) {
+                        Kr = fresnel(O, n, eta);
+                    } else {
+                        Kr = 1 - Kt;
                     }
                 }
             }
-            auto reflect = compute_ray(cp, S, count - 1);
-            if (reflect) {
-                auto ref = reflect.value();
-                res += ref * Ks;
-            }
+            res += reflected * Ks * Kr + refracted * (1 - Kr) * ((Ks) ? Ks : 1);
         }
         return res;
     }
@@ -115,19 +140,19 @@ std::optional<raytracing::color> raytracing::Scene::compute_ray(const raytracing
 }
 
 std::optional<std::tuple<raytracing::p3, raytracing::vec3, float, float, float, float, float, raytracing::color>> raytracing::Scene::cast_ray(const raytracing::p3 &s, const raytracing::vec3 &ray) const {
-    std::optional<p3> closest_point;
-    std::shared_ptr<const Object> closest_object;
+    std::optional<p3> closest_point = std::nullopt;
+    const Object* closest_object = nullptr;
     double min_dist = std::numeric_limits<double>::infinity(); // never compared before initialization
 
     for (const auto& object : objects_) {
         const auto hit = object->hit(s, ray);
         if (hit) {
-            const auto& [intersection_point, object] = hit.value();
+            auto &[intersection_point, intersect_object] = hit.value();
             double sqr = (intersection_point - s).square();
             if (sqr > .00001 && sqr < min_dist) {
                 closest_point = intersection_point;
                 min_dist = sqr;
-                closest_object = object;
+                closest_object = intersect_object;
             }
         }
     }
@@ -152,6 +177,31 @@ std::optional<std::tuple<raytracing::p3, raytracing::vec3, float, float, float, 
     }
 
     return std::nullopt;
+}
+
+std::vector<std::tuple<raytracing::color, double>>
+raytracing::Scene::light_passing_objects(const raytracing::p3 &begin, const raytracing::p3 &end) const {
+    const vec3 ray = (end - begin);
+
+    std::vector<std::tuple<raytracing::color, double>> passing_values;
+
+    for (const auto& object : objects_) {
+        const auto hit = object->hit(begin, ray);
+        if (hit) {
+            auto &[intersection_point, intersect_object] = hit.value();
+            double sqr = (intersection_point - begin).square();
+            double sqr_end = (intersection_point - end).square();
+            if (sqr > .00001 && sqr_end > .00001 && sqr < ray.square()) {
+                auto [Kd, Ks, ns, Kt, eta, c] = intersect_object->texture(intersection_point).value();
+                if (Kt) {
+                    passing_values.emplace_back(std::tuple(c, Kd));
+                } else {
+                    return std::vector<std::tuple<raytracing::color, double>>(1, std::tuple(c, 1));
+                }
+            }
+        }
+    }
+    return passing_values;
 }
 
 inline double in(double p1, double p2, double t) {

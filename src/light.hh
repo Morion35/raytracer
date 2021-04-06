@@ -13,30 +13,31 @@ namespace raytracing {
 
     class Light {
     public:
-        virtual double intensity(const p3&, const SceneType&) const = 0;
+        virtual color intensity(const p3&, const SceneType&) const = 0;
         virtual p3 position() const = 0;
     };
 
     class Point_Light : public Light {
     public:
 
-        Point_Light(raytracing::p3 p, float I) : p_(p), I_(I) {};
+        Point_Light(raytracing::p3 p, double I, color c = color(1., 1., 1.)) : p_(p), I_(I), c_(c) {};
 
         p3 position() const override { return p_; }
-        double intensity(const p3& p, const SceneType&) const override;
+        color intensity(const p3& p, const SceneType&) const override;
 
     private:
         p3 p_;
         double I_;
+        color c_;
     };
 
     class Square_Light : public Light {
     public:
 
-        Square_Light(raytracing::p3 p, double d, unsigned char step, double I) : center_(p), d_(d), step_(step), I_(I) { };
+        Square_Light(raytracing::p3 p, double d, unsigned char step, double I, color c = color(1., 1., 1.)) : center_(p), d_(d), step_(step), I_(I), c_(c) { };
 
         p3 position() const override { return center_; }
-        double intensity(const p3& p, const SceneType&) const override;
+        color intensity(const p3& p, const SceneType&) const override;
 
     private:
         p3 center_;
@@ -44,6 +45,7 @@ namespace raytracing {
         unsigned char step_;
 
         double I_;
+        color c_;
     };
 }
 

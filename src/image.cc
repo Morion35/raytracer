@@ -37,7 +37,7 @@ namespace raytracing {
         ppm << "P6" << std::endl << width_ << std::endl << height_ << std::endl << "255" << std::endl;
         for (const auto& row : data_) {
             for (const auto& pixel : row) {
-                ppm << pixel.r << pixel.g << pixel.b;
+                ppm << (unsigned char) (pixel.r * 255) << (unsigned char) (pixel.g * 255) << (unsigned char) (pixel.b * 255);
             }
         }
     }
