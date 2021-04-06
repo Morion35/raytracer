@@ -16,7 +16,7 @@ raytracing::Image raytracing::Scene::compute_image(const unsigned short width, c
     unsigned count = 0;
 
     for (unsigned i = 0; i < height; ++i) {
-//#pragma omp parallel for
+#pragma omp parallel for
         for (unsigned j = 0; j < width; ++j) {
             const auto& pixel = pixels[i][j];
             double r = 0, g = 0, b = 0;

@@ -5,7 +5,6 @@
 #include <map>
 
 #include "objects.hh"
-#include "scene.hh"
 
 using namespace raytracing;
 
@@ -28,11 +27,11 @@ std::optional<p3> Sphere::intersect(const p3& p, const vec3& v) const noexcept {
 }
 
 std::optional<texture_values> Sphere::texture(const p3 &p) const {
-    return std::optional(material_->texture(p));
+    return std::optional(material_->texture(p, norm(p).value()));
 }
 
 std::optional<texture_values> Plane::texture(const p3 &p) const {
-    return std::optional(material_->texture(p));
+    return std::optional(material_->texture(p, norm(p).value()));
 }
 
 std::optional<vec3> Sphere::norm(const p3& p) const {

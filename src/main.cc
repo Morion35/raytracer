@@ -33,13 +33,14 @@ int main()
     // objects.push_back(mirror);
     // objects.push_back(mirror2);
 
-    auto wall = std::make_shared<Plane>(vec3(0, 0, -1), p3(0, 0, 35), std::make_shared<Z_Paved_Material>(color(255, 255,255), color(60, 20,10),1 , .1, 0.0, .8, .9, 1.5));
-    auto floor = std::make_shared<Plane>(vec3(0, 1, 0), p3(0, -15, 0), std::make_shared<Z_Paved_Material>(color(255, 255,255), color(60, 20,10),1 , 1, 0.0, .8, 0));
-    objects.push_back(wall);
+    auto wall = std::make_shared<Plane>(vec3(0, 0, -1), p3(0, 0, 35), std::make_shared<Plane_Paved_Material>(color(255, 255,255), color(60, 20,10),1, .1, 0.0, .8, .9, 1.5));
+    auto floor = std::make_shared<Plane>(vec3(0, 1, 0), p3(0, -15, 0), std::make_shared<Plane_Paved_Material>(color(255, 255,255), color(60, 20,10),10, 1, 0.0, .8, 0));
+    // objects.push_back(wall);
     objects.push_back(floor);
 
-    auto ball = std::make_shared<Sphere>(p3(-10, 10, 80), 20., std::make_shared<Uniform_Material>(color(100, 100, 100), .2, .8, 3));
-    auto ball2 = std::make_shared<Sphere>(p3(0, 0, 30), 5., std::make_shared<Uniform_Material>(color(0, 0, 0), 0.1, .9, 9.9, 1, 1.5));
+    // auto ball = std::make_shared<Sphere>(p3(-10, 10, 80), 20., std::make_shared<Uniform_Material>(color(100, 100, 100), .2, .8, 3));
+    auto ball = std::make_shared<Sphere>(p3(-10, 10, 80), 20, std::make_shared<Spherical_Paved_Material>(color(255, 255,255), color(60, 20,10), 10, 1, .0, .8, 0));
+    auto ball2 = std::make_shared<Sphere>(p3(10, -10, 50), 5., std::make_shared<Uniform_Material>(color(0, 0, 0), 0.1, .9, 9.9, 1, 1.5));
     auto bulb = std::make_shared<Sphere>(p3(0, 30, 40), 3., std::make_shared<Uniform_Material>(color(1., 1., 1.), 0.0, 1.0, 1, 1, 1.5));
     auto sky = std::make_shared<Sphere>(p3(0, 0, 0), 500., std::make_shared<Uniform_Material>(color(30, 120, 180)));
 
