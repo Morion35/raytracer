@@ -20,16 +20,17 @@ namespace raytracing {
     public:
         virtual std::optional<p3> intersect(const p3&, const vec3&) const noexcept = 0;
         virtual std::optional<vec3> norm(const p3&) const = 0;
-        virtual std::optional<std::tuple<p3, vec3, float, float, float, color>> hit(const p3& p, const vec3& v) const noexcept {
+
+        virtual std::optional<std::tuple<p3, std::shared_ptr<const Object>>> hit(const p3& p, const vec3& v) const noexcept {
             auto hit = intersect(p, v);
             if (hit) {
                 auto hitp = hit.value();
-                auto [s, d, ns, c] = texture(hitp).value();
-                return std::tuple(hitp, norm(hitp).value(), s, d, ns, c);
+                return std::tuple(hitp, std::shared_ptr<const Object>(this));
             }
             return std::nullopt;
         };
-        virtual std::optional<std::tuple<float, float, float, color>> texture(const p3&) const = 0;
+
+        virtual std::optional<texture_values> texture(const p3&) const = 0;
         virtual std::string name() const = 0;
     };
 
@@ -41,7 +42,7 @@ namespace raytracing {
 
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
         std::optional<vec3> norm(const p3&) const override;
-        std::optional<std::tuple<float, float, float, color>> texture(const p3&) const override;
+        std::optional<texture_values> texture(const p3&) const override;
         std::string name() const override { return "Sphere"; };
 
     private:
@@ -60,7 +61,7 @@ namespace raytracing {
 
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
         std::optional<vec3> norm(const p3&) const override;
-        std::optional<std::tuple<float, float, float, color>> texture(const p3&) const override;
+        std::optional<texture_values> texture(const p3&) const override;
         std::string name() const override { return "Plane"; };
 
     private:
@@ -84,7 +85,7 @@ namespace raytracing {
 
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
 
-        std::optional<std::tuple<float, float, float, color>> texture(const p3& p) const override {
+        std::optional<texture_values> texture(const p3& p) const override {
             return texture_->texture(p);
         }
 
@@ -141,7 +142,7 @@ namespace raytracing {
 
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
 
-        std::optional<std::tuple<float, float, float, color>> texture(const p3& p) const override { return texture_->texture(p); };
+        std::optional<texture_values> texture(const p3& p) const override { return texture_->texture(p); };
 
         std::string name() const override { return "Box"; };
     private:
@@ -161,9 +162,9 @@ namespace raytracing {
             initialize();
         };
 
-        std::optional<std::tuple<p3, vec3, float, float, float, color>> hit(const p3& p, const vec3& v) const noexcept override;
+        std::optional<std::tuple<p3, std::shared_ptr<const Object>>> hit(const p3& p, const vec3& v) const noexcept override;
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
-        std::optional<std::tuple<float, float, float, color>> texture(const p3& p) const override { return texture_->texture(p); };
+        std::optional<texture_values> texture(const p3& p) const override { return texture_->texture(p); };
         std::optional<vec3> norm(const p3& p) const override;
         std::string name() const override { return "Blob"; };
 

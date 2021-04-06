@@ -30,7 +30,7 @@ namespace raytracing {
 
 
         std::optional<color> compute_ray(const p3& source, const vec3& ray, unsigned) const override;
-        std::optional<std::tuple<p3, vec3, float, float, float, color>> cast_ray(const p3& source, const vec3& ray) const override;
+        std::optional<std::tuple<p3, vec3, float, float, float, float, float, color>> cast_ray(const p3& source, const vec3& ray) const override;
 
     private:
 

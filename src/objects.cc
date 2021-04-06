@@ -3,8 +3,8 @@
 //
 
 #include <map>
+
 #include "objects.hh"
-#include "iostream"
 #include "scene.hh"
 
 using namespace raytracing;
@@ -27,11 +27,11 @@ std::optional<p3> Sphere::intersect(const p3& p, const vec3& v) const noexcept {
     return std::nullopt;
 }
 
-std::optional<std::tuple<float, float, float, color>> Sphere::texture(const p3 &p) const {
+std::optional<texture_values> Sphere::texture(const p3 &p) const {
     return std::optional(material_->texture(p));
 }
 
-std::optional<std::tuple<float, float, float, color>> Plane::texture(const p3 &p) const {
+std::optional<texture_values> Plane::texture(const p3 &p) const {
     return std::optional(material_->texture(p));
 }
 
@@ -335,13 +335,13 @@ std::optional<vec3> Box::norm(const p3 &p) const {
     return std::nullopt;
 }
 
-std::optional<std::tuple<p3, vec3, float, float, float, color>> Blob::hit(const p3 &o, const vec3 &ray) const noexcept {
+std::optional<std::tuple<p3, std::shared_ptr<const Object>>> Blob::hit(const p3 &o, const vec3 &ray) const noexcept {
     if (!box_.intersect(o, ray)) {
         return std::nullopt;
     }
     else {
         std::optional<p3> closest_point;
-        std::shared_ptr<SmoothTriangle> closest_object;
+        std::shared_ptr<const Object> closest_object;
         double min_dist = std::numeric_limits<double>::infinity(); // never compared before initialization
 
         for (const auto& triangle : triangles_) {
@@ -356,8 +356,9 @@ std::optional<std::tuple<p3, vec3, float, float, float, color>> Blob::hit(const 
                 }
             }
         }
+
         if (closest_point)
-            return closest_object->hit(o, ray);
+            return std::tuple(closest_point.value(), closest_object);
         return std::nullopt;
     }
 }

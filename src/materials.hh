@@ -8,22 +8,22 @@
 
 #include "type.hh"
 #include <tuple>
+
 namespace raytracing {
-    using namespace raytracing;
+    using texture_values = std::tuple<float, float, float, float, float, color>;
+
     class Texture_Material {
     public:
-        virtual std::tuple<float, float, float, color> texture(const p3&) const = 0;
+        virtual texture_values texture(const p3&) const = 0;
     };
 
     class Uniform_Material : public Texture_Material {
     public:
+        explicit Uniform_Material(color C, float Kd = 1, float Ks = 0, float ns = 1, float Kt = 0, float eta = 1)
+            : C_(C), Ks_(Ks), Kd_(Kd), ns_(ns), Kt_(Kt), eta_(eta) {};
 
-        Uniform_Material(float Kd, float Ks, float ns, color C) : Ks_(Ks), Kd_(Kd), ns_(ns), C_(C) {};
-        Uniform_Material(color c) : C_(c) {};
-
-        std::tuple<float, float, float, color> texture(const p3&) const override {
-
-            return std::tuple(Kd_, Ks_, ns_, C_);
+        texture_values texture(const p3&) const override {
+            return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, C_);
         }
 
     private:
@@ -31,6 +31,8 @@ namespace raytracing {
         color C_;
         float Ks_;
         float ns_;
+        float Kt_;
+        float eta_;
     };
 }
 
