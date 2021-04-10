@@ -86,7 +86,7 @@ namespace raytracing {
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
 
         std::optional<texture_values> texture(const p3& p) const override {
-            return texture_->texture(p, norm(p).value());
+            return texture_->texture(p.x, p.z);
         }
 
         std::string name() const override {
@@ -142,9 +142,7 @@ namespace raytracing {
 
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
 
-        std::optional<texture_values> texture(const p3& p) const override {
-            return texture_->texture(p, norm(p).value());
-        };
+        std::optional<texture_values> texture(const p3& p) const override;
 
         std::string name() const override { return "Box"; };
     private:
@@ -168,7 +166,7 @@ namespace raytracing {
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
 
         std::optional<texture_values> texture(const p3& p) const override {
-            return texture_->texture(p, norm(p).value());
+            return texture_->texture(p.x, p.z);
         };
 
         std::optional<vec3> norm(const p3& p) const override;

@@ -7,6 +7,8 @@
 #define RAYTRACING_MATERIALS_HH
 
 #include "type.hh"
+#include "image.hh"
+
 #include <tuple>
 
 namespace raytracing {
@@ -14,7 +16,7 @@ namespace raytracing {
 
     class Texture_Material {
     public:
-        virtual texture_values texture(const p3&, const vec3& n) const = 0;
+        virtual texture_values texture(double u, double v) const = 0;
     };
 
     class Uniform_Material : public Texture_Material {
@@ -22,7 +24,7 @@ namespace raytracing {
         explicit Uniform_Material(color C, float Kd = 1, float Ks = 0, float ns = 1, float Kt = 0, float eta = 1)
             : C_(C), Ks_(Ks), Kd_(Kd), ns_(ns), Kt_(Kt), eta_(eta) {};
 
-        texture_values texture(const p3&, const vec3& n) const override {
+        texture_values texture(const double u, const double v) const override {
             return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, C_);
         }
 
@@ -35,13 +37,36 @@ namespace raytracing {
         float eta_;
     };
 
-    class Plane_Paved_Material : public Texture_Material {
+    class Paved_Material : public Texture_Material {
     public:
-        explicit Plane_Paved_Material(color C1, color C2, double e, float Kd = 1, float Ks = 0, float ns = 1, float Kt = 0, float eta = 1)
+        explicit Paved_Material(color C1, color C2, double e, float Kd = 1, float Ks = 0, float ns = 1, float Kt = 0, float eta = 1)
                 : C1_(C1), C2_(C2), e_(e), Ks_(Ks), Kd_(Kd), ns_(ns), Kt_(Kt), eta_(eta) {};
 
-        texture_values texture(const p3& p, const vec3& n) const override {
-            double sines = std::sin(M_PIf32 / e_ * p.x) * std::sin(M_PIf32 / e_ * p.y) * std::sin(M_PIf32 / e_ * p.z);
+        texture_values texture(const double u, const double v) const override {
+            unsigned u2 = std::floor(u * e_);
+            unsigned v2 = std::floor(v * e_);
+
+            return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, (u2 + v2) % 2 == 0 ? C1_ : C2_);
+        }
+
+    private:
+        float Kd_;
+        double e_;
+        color C1_;
+        color C2_;
+        float Ks_;
+        float ns_;
+        float Kt_;
+        float eta_;
+    };
+
+    class Sin_Paved_Material : public Texture_Material {
+    public:
+        explicit Sin_Paved_Material(color C1, color C2, double e, float Kd = 1, float Ks = 0, float ns = 1, float Kt = 0, float eta = 1)
+                : C1_(C1), C2_(C2), e_(e), Ks_(Ks), Kd_(Kd), ns_(ns), Kt_(Kt), eta_(eta) {};
+
+        texture_values texture(const double u, const double v) const override {
+            double sines = std::sin(M_PIf32 / e_ * u) * std::sin(M_PIf32 / e_ * v);
             return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, sines > 0 ? C1_ : C2_);
         }
 
@@ -56,20 +81,15 @@ namespace raytracing {
         float eta_;
     };
 
-    class Spherical_Paved_Material : public Texture_Material {
+    class Ring_Material : public Texture_Material {
     public:
-        explicit Spherical_Paved_Material(color C1, color C2, double e, float Kd = 1, float Ks = 0, float ns = 1, float Kt = 0, float eta = 1)
+        explicit Ring_Material(color C1, color C2, double e, float Kd = 1, float Ks = 0, float ns = 1, float Kt = 0, float eta = 1)
                 : C1_(C1), C2_(C2), e_(e), Ks_(Ks), Kd_(Kd), ns_(ns), Kt_(Kt), eta_(eta) {};
 
-        texture_values texture(const p3& p, const vec3& n) const override {
-            double phi = std::atan2(n.w, n.u);
-            double theta = std::asin(n.v);
-
-            double u = 0.5 + (phi / (2 * M_PIf32));
-            double v = 0.5 - (theta / M_PIf32);
-
-            double sines = std::sin(e_ * u / (2 * M_PIf32)) * std::sin(e_ * v / (2 * M_PIf32));
-            return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, sines > 0 ? C1_ : C2_);
+        texture_values texture(const double u, const double v) const override {
+            double u2 = u * e_;
+            double v2 = v * e_;
+            return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, (int) (std::sqrt(u2 * u2 + v2 * v2)) % 2 == 0 ? C1_ : C2_);
         }
 
     private:
@@ -77,12 +97,74 @@ namespace raytracing {
         double e_;
         color C1_;
         color C2_;
+        float Ks_;
+        float ns_;
+        float Kt_;
+        float eta_;
+    };
+
+    class Ppm_Material : public Texture_Material {
+    public:
+        explicit Ppm_Material (const std::string& filename, float Kd = 1, float Ks = 0, float ns = 1, float Kt = 0, float eta = 1)
+                : texture_image_(filename), Ks_(Ks), Kd_(Kd), ns_(ns), Kt_(Kt), eta_(eta) {};
+
+        texture_values texture(const double u, const double v) const override {
+            unsigned x = (unsigned) (texture_image_.width() * u) % texture_image_.width();
+            unsigned y = (unsigned) (texture_image_.height() * v) % texture_image_.height();
+
+            return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, texture_image_.data()[y][x]);
+        }
+
+    private:
+        raytracing::Image texture_image_;
+        float Kd_;
+        float Ks_;
+        float ns_;
+        float Kt_;
+        float eta_;
+    };
+
+    class Cube_Material : public Texture_Material {
+    public:
+        explicit Cube_Material (color main, color ul, color ur, color bl, color br, double e, float Kd = 1, float Ks = 0, float ns = 1, float Kt = 0, float eta = 1)
+                : main_(main), ul_(ul), ur_(ur), bl_(bl), br_(br), e_(e), Ks_(Ks), Kd_(Kd), ns_(ns), Kt_(Kt), eta_(eta) {};
+
+        texture_values texture(const double u, const double v) const override {
+            double u2 = std::fmod(u * e_, 1.);
+            double v2 = std::fmod(v * e_, 1.);
+
+            if (u2 < 0) { u2 += 1.; }
+            if (v2 < 0) { v2 += 1.; }
+
+            if (v2 > 0.8) {
+                if (u2 < 0.2)
+                    return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, ul_);
+                if (u2 > 0.8)
+                    return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, ul_);
+            }
+            else if (v2 < 0.2) {
+                if (u2 < 0.2)
+                    return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, bl_);
+                if (u2 > 0.8)
+                    return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, br_);
+            }
+
+            return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, main_);
+        }
+
+    private:
+        color main_;
+        color ul_;
+        color ur_;
+        color br_;
+        color bl_;
+        double e_;
+        float Kd_;
         float Ks_;
         float ns_;
         float Kt_;
         float eta_;
     };
 }
-
 
 #endif //RAYTRACING_MATERIALS_HH

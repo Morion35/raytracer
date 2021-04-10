@@ -7,9 +7,9 @@
 #define RAYTRACING_IMAGE_HH
 
 #include "type.hh"
+
 #include <vector>
 #include <string>
-// #include <jpeglib.h>
 
 namespace raytracing {
 
@@ -19,14 +19,14 @@ namespace raytracing {
         Image(unsigned width, unsigned height) : width_{width}, height_{height} {
             data_.assign(height_, std::vector<color>(width_));
         };
-        explicit Image(const std::string& ppm);
+        explicit Image(const std::string& filename);
 
         void to_ppm(const std::string& filename) const;
 
         unsigned width() const { return width_; }
         unsigned height() const { return height_; }
 
-        auto data() const { return data_; };
+        auto& data() const { return data_; };
         void set_pixel(unsigned i, unsigned j, color c) {
             data_[i][j] = c;
         }
@@ -36,7 +36,6 @@ namespace raytracing {
         unsigned height_;
         std::vector<std::vector<color>> data_;
     };
-
 }
 
 #endif //RAYTRACING_IMAGE_HH

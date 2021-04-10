@@ -7,30 +7,54 @@
 #include <fstream>
 
 namespace raytracing {
-    Image::Image(const std::string& filename) {
-        std::ifstream ss(filename);
-        if (!ss) {
-            std::cerr << "Could not open file: " << filename << '\n';
-        }
-        std::string magic;
-        unsigned maxval;
-        ss >> magic >> width_ >> height_ >> maxval;
+    Image::Image(const std::string& filename)
+    {
+        std::ifstream file = std::ifstream(filename, std::ios::binary);
 
-        data_.reserve(height_);
-        char r;
-        char g;
-        char b;
-        for (size_t j = 0; j < height_; ++j) {
-            std::vector<color> row(width_);
-            for (size_t i = 0; i < width_; ++i) {
-                ss.read(&r, 1);
-                ss.read(&g, 1);
-                ss.read(&b, 1);
-                row[i] = color(r, g, b);
-            }
-            data_.push_back(row);
+        if (!file.is_open())
+        {
+            std::cout << "Could not access '" << filename << "'\n";
+            return;
         }
+
+        std::string file_type;
+        file >> file_type;
+
+        if (file_type != "P6")
+        {
+            std::cout << "'" << filename << "' has wrong file type\n";
+            return;
+        }
+
+        file >> width_;
+        file >> height_;
+
+        unsigned char max;
+        file >> max;
+
+        data_ = std::vector<std::vector<color>>();
+        data_.assign(height_, std::vector<color>(width_));
+
+        for (size_t i = 0; i < height_; ++i)
+        {
+            for (size_t j = 0; j < width_; ++j)
+            {
+                char r;
+                char g;
+                char b;
+
+                file.read(&r, 1);
+                file.read(&g, 1);
+                file.read(&b, 1);
+
+                data_[i][j] = color(r, g, b);
+            }
+        }
+
+        file.clear();
+        file.close();
     }
+
     void Image::to_ppm(const std::string& filename) const {
         std::ofstream ppm(filename);
 
