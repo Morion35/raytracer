@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <random>
 
 raytracing::Image raytracing::Scene::compute_image(const unsigned short width, const unsigned short height, const unsigned compute_depth, bool aliasing) {
 
@@ -13,24 +14,44 @@ raytracing::Image raytracing::Scene::compute_image(const unsigned short width, c
 
     Image image(width, height);
     const auto sources = camera_.source();
+    const double e = camera_.get_focal();
+    const auto transformer = camera_.transformer();
     unsigned count = 0;
+    std::mt19937_64 rd;
+    auto unif = std::uniform_real_distribution<double>(-e / 2, e / 2);
 
-    for (unsigned i = 0; i < height; ++i) {
 #pragma omp parallel for
+    for (unsigned i = 0; i < height; ++i) {
         for (unsigned j = 0; j < width; ++j) {
+            rd.seed(i * width + j);
             const auto& pixel = pixels[i][j];
             double r = 0, g = 0, b = 0;
+            unsigned nc = 1;
+            unsigned min = 2;
+
+            color mean = color(r, g, b);
+            p3 src = p3();
+
             unsigned n = pixel.size() * sources.size();
-            for (const auto& dst : pixel) {
-                for (const auto& src : sources) {
-                    auto res = compute_ray(src, (dst - src).normalize(), compute_depth).value_or(color());
-                    r += res.r;
-                    g += res.g;
-                    b += res.b;
+            color precendent_mean = mean;
+            do {
+                nc++;
+                precendent_mean = mean;
+                for (const auto& source : sources) {
+                    src = source + transformer(vec3(unif(rd), unif(rd), 0));
+                    for (const auto& dst : pixel) { // aliasing
+                        auto res = compute_ray(src, (dst - src).normalize(), compute_depth).value_or(color());
+                        r += res.r;
+                        g += res.g;
+                        b += res.b;
+                    }
                 }
-            }
-            image.set_pixel(i, j, color(r / n, g / n, b / n));
+                unsigned div = n * nc;
+                mean = color(r / div, g / div, b / div);
+            } while (nc < min || mean.diff(precendent_mean) > 1e-4);
+            image.set_pixel(i, j, mean);
         }
+#pragma omp critical
         ++count;
         if (count % (height/10) == 0) {
             std::cout << "completion: " << count * 100. / height << "%\n";

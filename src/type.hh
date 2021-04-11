@@ -65,6 +65,13 @@ namespace raytracing {
 
         color operator-(const color& c) const { return color(*this) -= c; }
 
+        double diff(const color& c) const {
+            double rdiff = r - c.r;
+            double gdiff = g - c.g;
+            double bdiff = b - c.b;
+            return std::sqrt(rdiff * rdiff + bdiff * bdiff + gdiff * gdiff);
+        }
+
         color operator+(const color& c) const { return color(*this) += c; }
 
         color operator*(double l) const { return color(*this) *= l; };

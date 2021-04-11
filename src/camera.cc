@@ -14,13 +14,16 @@ raytracing::Camera::Camera(raytracing::p3 origin, p3 viewpoint, vec3 sky, double
                                                                                                         ay_(ay),
                                                                                                         dz_(dz),
                                                                                                         d_(d),
-                                                                                                        e_(e) {
+                                                                                                        e_(e),
+                                                                                                        n_((P_ - C_).normalize()),
+                                                                                                        right_(sky_.cross(n_).normalize()),
+                                                                                                        up_(n_.cross(right_).normalize()),
+                                                                                                        transform_(n_, right_, up_)
+{
+    std::random_device random_device;
     n_ = (P_ - C_).normalize();
     right_ = sky_.cross(n_).normalize();
     up_ = n_.cross(right_).normalize();
-    x_ = vec3(right_.u, up_.u, n_.u);
-    y_ = vec3(right_.v, up_.v, n_.v);
-    z_ = vec3(right_.w, up_.w, n_.w);
     sources_.push_back(C_);
     if (e_ == 0 || d_ == 0)
         return;
