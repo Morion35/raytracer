@@ -26,19 +26,12 @@ std::optional<p3> Sphere::intersect(const p3& p, const vec3& v) const noexcept {
     return std::nullopt;
 }
 
-std::optional<texture_values> Sphere::texture(const p3 &p) const {
-    auto n = norm(p).value();
-    double phi = std::atan2(n.w, n.u);
-    double theta = std::asin(n.v);
-
-    double u = 0.5 + (phi / (2 * M_PIf32));
-    double v = 0.5 + (theta / M_PIf32);
-
-    return std::optional(material_->texture(u, v));
+std::optional<material_values> Sphere::texture(const p3 &p) const {
+    return std::optional(texture_->texture((p - center_).p()));
 }
 
-std::optional<texture_values> Plane::texture(const p3 &p) const {
-    return std::optional(material_->texture(p.x, p.z));
+std::optional<material_values> Plane::texture(const p3 &p) const {
+    return std::optional(texture_->texture(p));
 }
 
 std::optional<vec3> Sphere::norm(const p3& p) const {
@@ -341,27 +334,8 @@ std::optional<vec3> Box::norm(const p3 &p) const {
     return std::nullopt;
 }
 
-std::optional<texture_values> Box::texture(const p3 &p) const {
-    auto pc = p - c_;
-    double absX = std::fabs(pc.u);
-    double absY = std::fabs(pc.v);
-    double absZ = std::fabs(pc.w);
-
-    double maxAxis, uc, vc;
-
-    if (pc.u >= 0 && absX >= absY && absX >= absZ) { maxAxis = absX; uc = -pc.w; vc = pc.v; }
-    if (pc.u < 0 && absX >= absY && absX >= absZ) { maxAxis = absX; uc = pc.w; vc = pc.v; }
-
-    if (pc.v >= 0 && absY >= absX && absY >= absZ) { maxAxis = absY; uc = pc.u; vc = -pc.w; }
-    if (pc.v < 0 && absY >= absX && absY >= absZ) { maxAxis = absY; uc = pc.u; vc = pc.w; }
-
-    if (pc.w >= 0 && absZ >= absX && absZ >= absY) { maxAxis = absZ; uc = pc.u; vc = pc.v; }
-    if (pc.w < 0 && absZ >= absX && absZ >= absY) { maxAxis = absZ; uc = -pc.u; vc = pc.v; }
-
-    double u = 0.5 * (uc / maxAxis + 1.);
-    double v = 0.5 * (vc / maxAxis + 1.);
-
-    return std::optional(texture_->texture(u, v));
+std::optional<material_values> Box::texture(const p3 &p) const {
+    return std::optional(texture_->texture((p - c_).p()));
 }
 
 std::optional<std::tuple<p3, const Object*>> Blob::hit(const p3 &o, const vec3 &ray) const noexcept {

@@ -7,7 +7,8 @@
 #define RAYTRACING_OBJECTS_HH
 
 #include "type.hh"
-#include "materials.hh"
+#include "textures.hh"
+
 #include <optional>
 #include <string>
 #include <memory>
@@ -30,50 +31,49 @@ namespace raytracing {
             return std::nullopt;
         };
 
-        virtual std::optional<texture_values> texture(const p3&) const = 0;
+        virtual std::optional<material_values> texture(const p3&) const = 0;
         virtual std::string name() const = 0;
     };
 
     class Sphere : public Object {
     public:
-        Sphere(const p3& center, double r, std::shared_ptr<Texture_Material>&& material) : center_(center), r_(r),
-                                                                                           material_(material)
+        Sphere(const p3& center, double r, std::shared_ptr<Texture>&& texture) : center_(center), r_(r),
+                                                                                           texture_(texture)
                                                                                            {};
 
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
         std::optional<vec3> norm(const p3&) const override;
-        std::optional<texture_values> texture(const p3&) const override;
+        std::optional<material_values> texture(const p3&) const override;
         std::string name() const override { return "Sphere"; };
 
     private:
         p3 center_;
         double r_;
-        std::shared_ptr<Texture_Material> material_;
+        std::shared_ptr<Texture> texture_;
     };
 
     class Plane : public Object {
-
     public:
-        Plane(const vec3& n, const p3& p, std::shared_ptr<Texture_Material>  material) : n_(n), p_(p), material_(std::move(material)) {
+        Plane(const vec3& n, const p3& p, std::shared_ptr<Texture>  texture) : n_(n), p_(p), texture_(std::move(texture)) {
             d_ = n * p.vec();
             n_ = n_.normalize();
         };
 
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
         std::optional<vec3> norm(const p3&) const override;
-        std::optional<texture_values> texture(const p3&) const override;
+        std::optional<material_values> texture(const p3&) const override;
         std::string name() const override { return "Plane"; };
 
     private:
         vec3 n_;
         p3 p_;
         double d_;
-        std::shared_ptr<Texture_Material> material_;
+        std::shared_ptr<Texture> texture_;
     };
 
     class Triangle : public Object {
     public:
-        Triangle(const p3& c1, const p3& c2, const p3& c3, std::shared_ptr<Texture_Material> texture) :
+        Triangle(const p3& c1, const p3& c2, const p3& c3, std::shared_ptr<Texture> texture) :
                 c1_(c1), c2_(c2), c3_(c3), texture_(std::move(texture)) {
             BA_ = (c2 - c1);
             CA_ = (c3 - c1);
@@ -85,8 +85,8 @@ namespace raytracing {
 
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
 
-        std::optional<texture_values> texture(const p3& p) const override {
-            return texture_->texture(p.x, p.z);
+        std::optional<material_values> texture(const p3& p) const override {
+            return texture_->texture(p);
         }
 
         std::string name() const override {
@@ -105,12 +105,12 @@ namespace raytracing {
         p3 c2_;
         p3 c3_;
 
-        std::shared_ptr<Texture_Material> texture_;
+        std::shared_ptr<Texture> texture_;
     };
 
     class SmoothTriangle : public Triangle {
     public:
-        SmoothTriangle(const p3& c1, const p3& c2, const p3& c3, const vec3& n1, const vec3& n2, const vec3& n3, std::shared_ptr<Texture_Material> texture) :
+        SmoothTriangle(const p3& c1, const p3& c2, const p3& c3, const vec3& n1, const vec3& n2, const vec3& n3, std::shared_ptr<Texture> texture) :
                 Triangle(c1, c2, c3, std::move(texture)), n1_(n1.normalize()), n2_(n2.normalize()), n3_(n3.normalize()) {};
 
         std::optional<vec3> norm(const p3&) const override;
@@ -137,23 +137,23 @@ namespace raytracing {
 
     class Box : public Object {
     public:
-        Box(p3 c, double e, std::shared_ptr<Texture_Material> texture) : c_(c), e_(e), texture_(std::move(texture)) {};
+        Box(p3 c, double e, std::shared_ptr<Texture> texture) : c_(c), e_(e), texture_(std::move(texture)) {};
         std::optional<vec3> norm(const p3&) const override;
 
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
 
-        std::optional<texture_values> texture(const p3& p) const override;
+        std::optional<material_values> texture(const p3& p) const override;
 
         std::string name() const override { return "Box"; };
     private:
-        std::shared_ptr<Texture_Material> texture_;
+        std::shared_ptr<Texture> texture_;
         p3 c_;
         double e_;
     };
 
     class Blob : public Object {
     public:
-        Blob(double e, double d, double threshold, const p3& center, std::vector<p3> sources, std::shared_ptr<Texture_Material>&& texture) :
+        Blob(double e, double d, double threshold, const p3& center, std::vector<p3> sources, std::shared_ptr<Texture>&& texture) :
                                                                 d_(d), e_(e), t_(threshold),
                                                                 s_(std::move(sources)),
                                                                 c_(center),
@@ -165,8 +165,8 @@ namespace raytracing {
         std::optional<std::tuple<p3, const Object*>> hit(const p3& p, const vec3& v) const noexcept override;
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
 
-        std::optional<texture_values> texture(const p3& p) const override {
-            return texture_->texture(p.x, p.z);
+        std::optional<material_values> texture(const p3& p) const override {
+            return texture_->texture(p);
         };
 
         std::optional<vec3> norm(const p3& p) const override;
@@ -185,7 +185,7 @@ namespace raytracing {
 
         double threshold() const { return t_; };
 
-        std::shared_ptr<Texture_Material> texture_;
+        std::shared_ptr<Texture> texture_;
         std::vector<std::shared_ptr<SmoothTriangle>> triangles_;
         std::vector<p3> s_;
         Box box_;
@@ -194,7 +194,6 @@ namespace raytracing {
         double d_;
         double t_;
     };
-
 }
 
 const int SQUARE_MAP[256][15] = {
