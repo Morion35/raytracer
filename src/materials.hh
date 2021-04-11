@@ -43,8 +43,8 @@ namespace raytracing {
                 : C1_(C1), C2_(C2), e_(e), Ks_(Ks), Kd_(Kd), ns_(ns), Kt_(Kt), eta_(eta) {};
 
         texture_values texture(const double u, const double v) const override {
-            unsigned u2 = std::floor(u * e_);
-            unsigned v2 = std::floor(v * e_);
+            unsigned u2 = std::floor(u / e_);
+            unsigned v2 = std::floor(v / e_);
 
             return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, ((u2 + v2) % 2 == 0) ? C1_ : C2_);
         }
