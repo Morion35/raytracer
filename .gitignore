@@ -1,4 +1,5 @@
 *.o
 cmake-build-*
 .idea
-*.ppm
+*.jpg
+image_test/*

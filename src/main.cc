@@ -323,12 +323,12 @@ Scene create_scene_skybox_1()
     objects.push_back(bulb);
 
     auto box = std::make_shared<Box>(p3(0, 0, 0), 100., std::make_shared<Skybox_Texture>(
-            std::make_shared<Ppm_Material>("../image_test/field-skyboxes/FishPond/negx.ppm", 1, 0, 0, 0, 0),
-            std::make_shared<Ppm_Material>("../image_test/field-skyboxes/FishPond/posx.ppm", 1, 0, 0, 0, 0),
-            std::make_shared<Ppm_Material>("../image_test/field-skyboxes/FishPond/posz.ppm", 1, 0, 0, 0, 0),
-            std::make_shared<Ppm_Material>("../image_test/field-skyboxes/FishPond/negz.ppm", 1, 0, 0, 0, 0),
-            std::make_shared<Ppm_Material>("../image_test/field-skyboxes/FishPond/posy.ppm", 1, 0, 0, 0, 0),
-            std::make_shared<Ppm_Material>("../image_test/field-skyboxes/FishPond/negy.ppm", 1, 0, 0, 0, 0),
+            std::make_shared<Ppm_Material>("../skybox/field-skyboxes/FishPond/negx.ppm", 1, 0, 0, 0, 0),
+            std::make_shared<Ppm_Material>("../skybox/field-skyboxes/FishPond/posx.ppm", 1, 0, 0, 0, 0),
+            std::make_shared<Ppm_Material>("../skybox/field-skyboxes/FishPond/posz.ppm", 1, 0, 0, 0, 0),
+            std::make_shared<Ppm_Material>("../skybox/field-skyboxes/FishPond/negz.ppm", 1, 0, 0, 0, 0),
+            std::make_shared<Ppm_Material>("../skybox/field-skyboxes/FishPond/posy.ppm", 1, 0, 0, 0, 0),
+            std::make_shared<Ppm_Material>("../skybox/field-skyboxes/FishPond/negy.ppm", 1, 0, 0, 0, 0),
                     100));
     objects.push_back(box);
 
