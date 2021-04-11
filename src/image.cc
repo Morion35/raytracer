@@ -29,8 +29,11 @@ namespace raytracing {
         file >> width_;
         file >> height_;
 
-        unsigned char max;
+        unsigned max;
         file >> max;
+
+        char ignore;
+        file.read(&ignore, 1);
 
         data_ = std::vector<std::vector<color>>();
         data_.assign(height_, std::vector<color>(width_));
@@ -47,7 +50,7 @@ namespace raytracing {
                 file.read(&g, 1);
                 file.read(&b, 1);
 
-                data_[i][j] = color(r, g, b);
+                data_[i][j] = color((unsigned char) r, (unsigned char) g, (unsigned char) b);
             }
         }
 
@@ -56,9 +59,10 @@ namespace raytracing {
     }
 
     void Image::to_ppm(const std::string& filename) const {
-        std::ofstream ppm(filename);
+        std::ofstream ppm(filename, std::ios::binary);
 
         ppm << "P6" << std::endl << width_ << std::endl << height_ << std::endl << "255" << std::endl;
+
         for (const auto& row : data_) {
             for (const auto& pixel : row) {
                 ppm << (unsigned char) (pixel.r * 255) << (unsigned char) (pixel.g * 255) << (unsigned char) (pixel.b * 255);

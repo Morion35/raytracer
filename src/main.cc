@@ -196,7 +196,7 @@ Scene create_scene_texture_2()
     auto sky = std::make_shared<Sphere>(p3(0, 0, 0), 500., std::make_shared<Uniform_Material>(color(30, 120, 180)));
     objects.push_back(sky);
 
-    auto earth = std::make_shared<Sphere>(p3(-10, 10, 80), 20, std::make_shared<Ppm_Material>("../image_test/texture_earth.ppm", 1, .0, .8, 0));
+    auto earth = std::make_shared<Sphere>(p3(-10, 10, 80), 20, std::make_shared<Ppm_Material>("../image_test/texture_earth.ppm", 1, 1, .0, .8, 0));
     auto ball2 = std::make_shared<Sphere>(p3(10, -10, 50), 5., std::make_shared<Uniform_Material>(color(0, 0, 0), 0.1, .9, 9.9, 1, 1.5));
     objects.push_back(earth);
     objects.push_back(ball2);
@@ -219,7 +219,8 @@ Scene create_scene_texture_3()
     auto bulb = std::make_shared<Sphere>(p3(0, 30, 40), 3., std::make_shared<Uniform_Material>(color(1., 1., 1.), 0.0, 1.0, 1, 1, 1.5));
     objects.push_back(bulb);
 
-    auto floor = std::make_shared<Plane>(vec3(0, 1, 0), p3(0, -15, 0), std::make_shared<Ppm_Material>("../image_test/texture_water.ppm", 1, .0, .8, 0));
+    auto floor = std::make_shared<Plane>(vec3(0, 1, 0), p3(0, -15, 0), std::make_shared<Ppm_Material>("../image_test/texture_water.ppm", 100, 1, .0, .8, 0));
+    // auto floor = std::make_shared<Plane>(vec3(0, 1, 0), p3(0, -15, 0), std::make_shared<Cube_Material>(color(255, 255, 255), color(255, 0, 0), color(255, 255, 0), color(0, 255, 0), color(0, 255, 255), 1, 1, 0, 0));
     objects.push_back(floor);
 
     auto camera = Camera(p3(0, 10, 0), p3(0, 0, 15), vec3(0, 1, 0), M_PI_4 * 1, M_PI_4 * 1,15, 0, 0);
@@ -272,7 +273,7 @@ Scene create_scene_texture_5()
     objects.push_back(floor);
 
     // auto box = std::make_shared<Box>(p3(-15, -9.9, 30), 10., std::make_shared<Cube_Material>(color(255, 255, 255), color(255, 0, 0), color(255, 255, 0), color(0, 255, 0), color(0, 255, 255), 1, 1, 0, 0));
-    auto box = std::make_shared<Box>(p3(-15, -9.9, 30), 10., std::make_shared<Paved_Material>(color(255, 255,255), color(0, 255,255),50, 1, 0.0, .8, 0));
+    auto box = std::make_shared<Box>(p3(-15, -9.9, 30), 10., std::make_shared<Paved_Material>(color(255, 255,255), color(0, 255,255),10, 1, 0.0, .8, 0));
     objects.push_back(box);
 
     auto ball_paved = std::make_shared<Sphere>(p3(-10, 10, 80), 20, std::make_shared<Paved_Material>(color(255, 255,255), color(60, 20,10), 15, 1, .0, .8, 0));
@@ -300,8 +301,7 @@ Scene create_scene_texture_6()
     auto floor = std::make_shared<Plane>(vec3(0, 1, 0), p3(0, -15, 0), std::make_shared<Paved_Material>(color(255, 255,255), color(60, 20,10),.1, 1, 0.0, .8, 0));
     objects.push_back(floor);
 
-    // auto box = std::make_shared<Box>(p3(-15, -9.9, 30), 10., std::make_shared<Cube_Material>(color(255, 255, 255), color(255, 0, 0), color(255, 255, 0), color(0, 255, 0), color(0, 255, 255), 1, 1, 0, 0));
-    auto box = std::make_shared<Box>(p3(-15, -9.9, 30), 10., std::make_shared<Ppm_Material>("../image_test/texture_earth.ppm",50, 1, 0.0, .8, 0));
+    auto box = std::make_shared<Box>(p3(-15, -9.9, 30), 10., std::make_shared<Ppm_Material>("../image_test/texture_earth.ppm",1, 1, 0, 0, 0, 0));
     objects.push_back(box);
 
     auto ball_paved = std::make_shared<Sphere>(p3(-10, 10, 80), 20, std::make_shared<Paved_Material>(color(255, 255,255), color(60, 20,10), 15, 1, .0, .8, 0));
@@ -313,9 +313,32 @@ Scene create_scene_texture_6()
     return Scene(objects, lights, camera);
 }
 
+Scene create_scene_texture_7()
+{
+    std::vector<std::shared_ptr<Object>> objects;
+    std::vector<std::shared_ptr<Light>> lights;
+
+    auto smooth_light = std::make_shared<Square_Light>(p3(0, 30, 40), 1, 3, 500, color(1., 1., 1.));
+    auto smooth_light2 = std::make_shared<Square_Light>(p3(0, 30, 0), 1, 3, 500, color(1., 1., 1.));
+    lights.push_back(smooth_light);
+    lights.push_back(smooth_light2);
+
+    auto bulb = std::make_shared<Sphere>(p3(0, 30, 40), 3., std::make_shared<Uniform_Material>(color(1., 1., 1.), 0.0, 1.0, 1, 1, 1.5));
+    objects.push_back(bulb);
+
+    auto box = std::make_shared<Box>(p3(0, 0, 0), 100., std::make_shared<Ppm_Material>("../image_test/texture_earth.ppm",1, 1, 0, 0, 0, 0));
+    objects.push_back(box);
+
+    auto ball = std::make_shared<Sphere>(p3(0, 0, 20), 5., std::make_shared<Uniform_Material>(color(0, 0, 0), 0.1, .9, 9.9 ));
+    objects.push_back(ball);
+
+    auto camera = Camera(p3(0, 0, 0), p3(0, 0, 15), vec3(0, 1, 0), M_PI_4 * 1, M_PI_4 * 1,15, 0, 0);
+    return Scene(objects, lights, camera);
+}
+
 int main()
 {
-    auto scene = create_scene_texture_5();
+    auto scene = create_scene_texture_7();
 
     auto image = scene.compute_image(1024, 1024, 3, false);
     std::cout << "Width: " << image.width() << "\n";

@@ -32,18 +32,12 @@ std::optional<texture_values> Sphere::texture(const p3 &p) const {
     double theta = std::asin(n.v);
 
     double u = 0.5 + (phi / (2 * M_PIf32));
-    double v = 0.5 - (theta / M_PIf32);
+    double v = 0.5 + (theta / M_PIf32);
 
     return std::optional(material_->texture(u, v));
 }
 
 std::optional<texture_values> Plane::texture(const p3 &p) const {
-    // double u = std::fmod(p.x, 1.);
-    // double v = std::fmod(p.z, 1.);
-
-    // if (u < 0) { u += 1.; }
-    // if (v < 0) { v += 1.; }
-
     return std::optional(material_->texture(p.x, p.z));
 }
 
@@ -348,20 +342,21 @@ std::optional<vec3> Box::norm(const p3 &p) const {
 }
 
 std::optional<texture_values> Box::texture(const p3 &p) const {
-    double absX = std::fabs(p.x);
-    double absY = std::fabs(p.y);
-    double absZ = std::fabs(p.z);
+    auto pc = p - c_;
+    double absX = std::fabs(pc.u);
+    double absY = std::fabs(pc.v);
+    double absZ = std::fabs(pc.w);
 
     double maxAxis, uc, vc;
 
-    if (p.x >= 0 && absX >= absY && absX >= absZ) { maxAxis = absX; uc = -p.z; vc = p.y; }
-    if (p.x < 0 && absX >= absY && absX >= absZ) { maxAxis = absX; uc = p.z; vc = p.y; }
+    if (pc.u >= 0 && absX >= absY && absX >= absZ) { maxAxis = absX; uc = -pc.w; vc = pc.v; }
+    if (pc.u < 0 && absX >= absY && absX >= absZ) { maxAxis = absX; uc = pc.w; vc = pc.v; }
 
-    if (p.y >= 0 && absY >= absX && absY >= absZ) { maxAxis = absY; uc = p.x; vc = -p.z; }
-    if (p.y < 0 && absY >= absX && absY >= absZ) { maxAxis = absY; uc = p.x; vc = p.z; }
+    if (pc.v >= 0 && absY >= absX && absY >= absZ) { maxAxis = absY; uc = pc.u; vc = -pc.w; }
+    if (pc.v < 0 && absY >= absX && absY >= absZ) { maxAxis = absY; uc = pc.u; vc = pc.w; }
 
-    if (p.z >= 0 && absZ >= absX && absZ >= absY) { maxAxis = absZ; uc = p.x; vc = p.y; }
-    if (p.z < 0 && absZ >= absX && absZ >= absY) { maxAxis = absZ; uc = -p.x; vc = p.y; }
+    if (pc.w >= 0 && absZ >= absX && absZ >= absY) { maxAxis = absZ; uc = pc.u; vc = pc.v; }
+    if (pc.w < 0 && absZ >= absX && absZ >= absY) { maxAxis = absZ; uc = -pc.u; vc = pc.v; }
 
     double u = 0.5 * (uc / maxAxis + 1.);
     double v = 0.5 * (vc / maxAxis + 1.);

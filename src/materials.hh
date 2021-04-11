@@ -46,7 +46,7 @@ namespace raytracing {
             unsigned u2 = std::floor(u * e_);
             unsigned v2 = std::floor(v * e_);
 
-            return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, (u2 + v2) % 2 == 0 ? C1_ : C2_);
+            return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, ((u2 + v2) % 2 == 0) ? C1_ : C2_);
         }
 
     private:
@@ -105,18 +105,27 @@ namespace raytracing {
 
     class Ppm_Material : public Texture_Material {
     public:
-        explicit Ppm_Material (const std::string& filename, float Kd = 1, float Ks = 0, float ns = 1, float Kt = 0, float eta = 1)
-                : texture_image_(filename), Ks_(Ks), Kd_(Kd), ns_(ns), Kt_(Kt), eta_(eta) {};
+        explicit Ppm_Material (const std::string& filename, double e, float Kd = 1, float Ks = 0, float ns = 1, float Kt = 0, float eta = 1)
+                : texture_image_(filename), e_(e), Ks_(Ks), Kd_(Kd), ns_(ns), Kt_(Kt), eta_(eta) {};
 
         texture_values texture(const double u, const double v) const override {
-            unsigned x = (unsigned) (texture_image_.width() * u) % texture_image_.width();
-            unsigned y = (unsigned) (texture_image_.height() * v) % texture_image_.height();
+            double u2 = std::fmod(u / e_, 1.);
+            double v2 = std::fmod(v / e_, 1.);
+
+            if (u2 < 0) { u2 += 1.; }
+            if (v2 < 0) { v2 += 1.; }
+
+            v2 = 1 - v2;
+
+            auto x = (unsigned) (texture_image_.width() * u2);
+            auto y = (unsigned) (texture_image_.height() * v2);
 
             return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, texture_image_.data()[y][x]);
         }
 
     private:
         raytracing::Image texture_image_;
+        double e_;
         float Kd_;
         float Ks_;
         float ns_;
@@ -130,22 +139,16 @@ namespace raytracing {
                 : main_(main), ul_(ul), ur_(ur), bl_(bl), br_(br), e_(e), Ks_(Ks), Kd_(Kd), ns_(ns), Kt_(Kt), eta_(eta) {};
 
         texture_values texture(const double u, const double v) const override {
-            double u2 = std::fmod(u * e_, 1.);
-            double v2 = std::fmod(v * e_, 1.);
-
-            if (u2 < 0) { u2 += 1.; }
-            if (v2 < 0) { v2 += 1.; }
-
-            if (v2 > 0.8) {
-                if (u2 < 0.2)
+            if (v > 0.8) {
+                if (u < 0.2)
                     return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, ul_);
-                if (u2 > 0.8)
-                    return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, ul_);
+                if (u > 0.8)
+                    return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, ur_);
             }
-            else if (v2 < 0.2) {
-                if (u2 < 0.2)
+            else if (v < 0.2) {
+                if (u < 0.2)
                     return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, bl_);
-                if (u2 > 0.8)
+                if (u > 0.8)
                     return std::tuple(Kd_, Ks_, ns_, Kt_, eta_, br_);
             }
 
