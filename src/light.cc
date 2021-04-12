@@ -56,7 +56,7 @@ raytracing::color raytracing::Square_Light::intensity(const raytracing::p3 &p, c
                     intensity -= color(1., 1., 1.) * Kd + (color(1., 1., 1.) - c) * Kd;
                 }
             }
-            intensity = (intensity / center_ray.dist(p)) * I_;
+            intensity = intensity * ((center_ray.dist(p) / -I_) + 1);
             r += intensity.r;
             g += intensity.g;
             b += intensity.b;

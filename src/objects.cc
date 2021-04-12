@@ -266,11 +266,70 @@ std::optional<vec3> SmoothTriangle::norm(const p3 &p) const {
 }
 
 std::optional<vec3> Cylinder::norm(const p3 &p) const {
-    return std::optional<vec3>();
+    if ((p.y <= cmin_.y + 0.00001 && p.y >= cmin_.y - 0.00001)
+        || (p.y <= cmin_.y + h_ + 0.00001 && p.y >= cmin_.y + h_ - 0.00001))
+        return vec3(0, 1, 0);
+
+    return (cmin_ - p3(p.x, cmin_.y, p.z)).normalize();
 }
 
-std::optional<p3> Cylinder::intersect(const p3 &, const vec3 &) const noexcept {
-    return std::optional<p3>();
+std::optional<p3> Cylinder::intersect(const p3 &p, const vec3 &ray) const noexcept {
+    vec3 v = vec3(ray.u, 0, ray.w);
+    vec3 dist = p - p3(cmin_.x, p.y, cmin_.z);
+
+    double a = v.square();
+    double b =  2 * v * dist;
+    double c = dist * dist - r_ * r_;
+    double d = b * b - 4 * a * c;
+
+    double t1 = (-b - std::sqrt(d)) / (2 * a);
+    double t2 = (-b + std::sqrt(d)) / (2 * a);
+
+    double tc;
+
+    if (t1 >= 0.00001 && t1 < t2)
+        tc = t1;
+    else if (t2 >= 0.00001)
+        tc = t2;
+    else
+        return std::nullopt;
+
+    double A = (cmin_.y - p.y) / ray.v;
+    double B = (cmin_.y + h_ - p.y) / ray.v;
+
+    double t3 = std::min(A, B);
+    double t4 = std::max(A, B);
+
+    if (t3 < 0 && t4 > 0) {
+        if (t4 > tc)
+            return p + tc * ray;
+        else if (t1 < 0)
+            return p + t4 * ray;
+        return std::nullopt;
+    }
+
+    if (t4 < 0)
+        return std::nullopt;
+
+    double tp = t3;
+
+    if (t1 < 0) {
+        if (tp < tc)
+            return p + tp * ray;
+        else
+            return std::nullopt;
+    }
+
+    if (t4 < tc)
+        return std::nullopt;
+
+    if (t3 < tc)
+        return p + tc * ray;
+
+    if (t1 < t3 && t2 < t3)
+        return std::nullopt;
+
+    return p + tp * ray;
 }
 
 std::optional<p3> Box::intersect(const p3 &o, const vec3 &ray) const noexcept {

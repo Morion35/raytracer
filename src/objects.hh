@@ -124,15 +124,25 @@ namespace raytracing {
 
     class Cylinder : public Object {
     public:
-        Cylinder(double r, const p3& c1, const p3& c2) : r_(r), c1_(c1), c2_(c2) {};
+        Cylinder(double r, double h, const p3& cmin, std::shared_ptr<Texture> texture)
+        : r_(r), h_(h), cmin_(cmin), texture_(std::move(std::move(texture))) {};
 
         std::optional<vec3> norm(const p3&) const override;
 
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
+
+        std::optional<material_values> texture(const p3& p) const override {
+            return texture_->texture(p);
+        }
+
+        std::string name() const override { return "Cylinder"; };
+
     private:
         double r_;
-        p3 c1_;
-        p3 c2_;
+        double h_;
+        p3 cmin_;
+
+        std::shared_ptr<Texture> texture_;
     };
 
     class Box : public Object {

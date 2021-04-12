@@ -26,7 +26,7 @@ raytracing::Image raytracing::Scene::compute_image(const unsigned short width, c
             rd.seed(i * width + j);
             const auto& pixel = pixels[i][j];
             double r = 0, g = 0, b = 0;
-            unsigned nc = 1;
+            unsigned nc = 0;
             unsigned min = 2;
 
             color mean = color(r, g, b);
@@ -48,7 +48,7 @@ raytracing::Image raytracing::Scene::compute_image(const unsigned short width, c
                 }
                 unsigned div = n * nc;
                 mean = color(r / div, g / div, b / div);
-            } while (nc < min || mean.diff(precendent_mean) > 1e-4);
+            } while (e && (nc < min || mean.diff(precendent_mean) > 1e-4));
             image.set_pixel(i, j, mean);
         }
 #pragma omp critical
