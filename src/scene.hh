@@ -20,10 +20,11 @@ namespace raytracing {
     class Scene : public SceneType {
     public:
 
-        Scene(std::vector<std::shared_ptr<Object>>  objects, std::vector<std::shared_ptr<Light>>  lights, Camera camera) : objects_(std::move(objects)),
-                                                                                         lights_(std::move(lights)),
-                                                                                         camera_(std::move(camera))
-                                                                                         {};
+        Scene(std::vector<std::shared_ptr<Object>>  objects, std::vector<std::shared_ptr<Light>>  lights,
+              Camera camera, double ambiant=0.05) :
+              objects_(std::move(objects)), lights_(std::move(lights)),
+              camera_(std::move(camera)), ambiant_(ambiant) {};
+
         explicit Scene(Camera camera) : camera_(std::move(camera)) {};
 
         Image compute_image(unsigned short width, unsigned short height, unsigned compute_depth, bool aliasing) override;
@@ -39,6 +40,8 @@ namespace raytracing {
         std::vector<std::shared_ptr<Object>> objects_;
         std::vector<std::shared_ptr<Light>> lights_;
         const Camera camera_;
+
+        double ambiant_;
     };
 }
 

@@ -8,6 +8,7 @@
 
 #include "type.hh"
 #include "textures.hh"
+#include "transformer.hh"
 
 #include <optional>
 #include <string>
@@ -124,15 +125,30 @@ namespace raytracing {
 
     class Cylinder : public Object {
     public:
-        Cylinder(double r, double h, const p3& cmin, std::shared_ptr<Texture> texture)
-        : r_(r), h_(h), cmin_(cmin), texture_(std::move(std::move(texture))) {};
+        Cylinder(double r, const p3& cmin, const p3& cmax, std::shared_ptr<Texture> texture)
+        : r_(r), cmin_(cmin), cmax_(cmax), texture_(std::move(std::move(texture))) {
+            h_ = (cmax_ - cmin_).norm();
+
+            vec3 z_forward(0, 0, 1);
+            vec3 up = (cmax_ - cmin_).normalize();
+            vec3 right = up.cross(z_forward).normalize();
+            vec3 forward = right.cross(up).normalize();
+
+            if (up == z_forward) {
+                vec3 x_forward(1, 0, 0);
+                forward = x_forward.cross(up).normalize();
+                right = up.cross(forward).normalize();
+            }
+
+            transformer_ = Transformer(forward, right, up);
+        };
 
         std::optional<vec3> norm(const p3&) const override;
 
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
 
         std::optional<material_values> texture(const p3& p) const override {
-            return texture_->texture(p);
+            return texture_->texture(transformer_.from_basis(p - cmin_).p() / r_);
         }
 
         std::string name() const override { return "Cylinder"; };
@@ -141,13 +157,26 @@ namespace raytracing {
         double r_;
         double h_;
         p3 cmin_;
+        p3 cmax_;
+
+        Transformer transformer_;
 
         std::shared_ptr<Texture> texture_;
     };
 
     class Box : public Object {
     public:
-        Box(p3 c, double e, std::shared_ptr<Texture> texture) : c_(c), e_(e), texture_(std::move(texture)) {};
+        Box(p3 c, double e, vec3 up, vec3 x_forward, std::shared_ptr<Texture> texture)
+        : c_(c), e_(e), texture_(std::move(texture)) {
+            vec3 up_n = up.normalize();
+            vec3 x_forward_n = x_forward.normalize();
+
+            vec3 forward = x_forward_n.cross(up_n).normalize();
+            vec3 right = up_n.cross(forward).normalize();
+
+            transformer_ = Transformer(forward, right, up_n);
+        };
+
         std::optional<vec3> norm(const p3&) const override;
 
         std::optional<p3> intersect(const p3&, const vec3&) const noexcept override;
@@ -155,10 +184,12 @@ namespace raytracing {
         std::optional<material_values> texture(const p3& p) const override;
 
         std::string name() const override { return "Box"; };
+
     private:
         std::shared_ptr<Texture> texture_;
         p3 c_;
         double e_;
+        Transformer transformer_;
     };
 
     class Blob : public Object {
@@ -168,7 +199,7 @@ namespace raytracing {
                                                                 s_(std::move(sources)),
                                                                 c_(center),
                                                                 texture_(texture),
-                                                                box_(center, e, nullptr) {
+                                                                box_(center, e, vec3(0, 1, 0), vec3(1, 0, 0), nullptr) {
             initialize();
         };
 

@@ -121,6 +121,9 @@ namespace raytracing {
 
         constexpr double operator*(const vec3& vec) const { return dot(vec); }
 
+        constexpr bool operator==(const vec3 &vec) const {
+            return u == vec.u && v == vec.v && w == vec.w;
+        }
 
         constexpr vec3 operator-=(const vec3 &vec) {
             u -= vec.u;
@@ -189,6 +192,10 @@ namespace raytracing {
 
         constexpr vec3 operator-(const p3& p) const {
             return vec3(x - p.x, y - p.y, z - p.z);
+        }
+
+        constexpr p3 operator/(const double l) const {
+            return p3(x / l, y / l, z / l);
         }
 
         constexpr p3 operator+=(double d) {

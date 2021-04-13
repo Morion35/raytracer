@@ -68,6 +68,25 @@ namespace raytracing {
         double e_;
     };
 
+    class Cylindre_Texture : public Texture {
+    public:
+        explicit Cylindre_Texture(std::shared_ptr<Material> material, const double& e)
+                : material_(std::move(material)), e_(e) {}
+
+        material_values texture(const p3& p) const override {
+            double theta = std::atan2(p.z, p.x);
+
+            double u = theta;
+            double v = p.y;
+
+            return material_->material(u * e_, v * e_);
+        };
+
+    private:
+        std::shared_ptr<Material> material_;
+        double e_;
+    };
+
     class Box_Texture : public Texture {
     public:
         explicit Box_Texture(std::shared_ptr<Material> material, const double& e)

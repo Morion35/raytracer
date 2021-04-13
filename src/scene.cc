@@ -108,7 +108,7 @@ std::optional<raytracing::color> raytracing::Scene::compute_ray(const raytracing
         auto [cp, n, Kd, Ks, ns, Kt, eta, c] = hit.value();
         auto O = (cp - s).normalize();
 
-        auto res = c * 0.05;
+        auto res = c * ambiant_;
         auto S = O - 2 * (O * n) * n;
 
         for (const auto &light : lights_) {

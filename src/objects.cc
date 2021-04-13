@@ -265,17 +265,22 @@ std::optional<vec3> SmoothTriangle::norm(const p3 &p) const {
     return norm.normalize();
 }
 
-std::optional<vec3> Cylinder::norm(const p3 &p) const {
-    if ((p.y <= cmin_.y + 0.00001 && p.y >= cmin_.y - 0.00001)
-        || (p.y <= cmin_.y + h_ + 0.00001 && p.y >= cmin_.y + h_ - 0.00001))
-        return vec3(0, 1, 0);
+std::optional<vec3> Cylinder::norm(const p3 &po) const {
+    const p3 p = transformer_.from_basis(po - cmin_).p();
 
-    return (cmin_ - p3(p.x, cmin_.y, p.z)).normalize();
+    if ((p.y <= 0.0001 && p.y >= -0.0001)
+        || (p.y <= h_ + 0.0001 && p.y >= h_ - 0.0001))
+        return (cmax_ - cmin_).normalize();
+
+    return transformer_.to_basis(p3() - p3(p.x, 0, p.z)).normalize();
 }
 
-std::optional<p3> Cylinder::intersect(const p3 &p, const vec3 &ray) const noexcept {
+std::optional<p3> Cylinder::intersect(const p3 &po, const vec3 &rayo) const noexcept {
+    const p3 p = transformer_.from_basis(po - cmin_).p();
+    const vec3 ray = transformer_.from_basis(rayo);
+
     vec3 v = vec3(ray.u, 0, ray.w);
-    vec3 dist = p - p3(cmin_.x, p.y, cmin_.z);
+    vec3 dist = p - p3(0, p.y, 0);
 
     double a = v.square();
     double b =  2 * v * dist;
@@ -294,17 +299,17 @@ std::optional<p3> Cylinder::intersect(const p3 &p, const vec3 &ray) const noexce
     else
         return std::nullopt;
 
-    double A = (cmin_.y - p.y) / ray.v;
-    double B = (cmin_.y + h_ - p.y) / ray.v;
+    double A = -p.y / ray.v;
+    double B = (h_ - p.y) / ray.v;
 
     double t3 = std::min(A, B);
     double t4 = std::max(A, B);
 
     if (t3 < 0 && t4 > 0) {
         if (t4 > tc)
-            return p + tc * ray;
+            return po + tc * rayo;
         else if (t1 < 0)
-            return p + t4 * ray;
+            return po + t4 * rayo;
         return std::nullopt;
     }
 
@@ -315,7 +320,7 @@ std::optional<p3> Cylinder::intersect(const p3 &p, const vec3 &ray) const noexce
 
     if (t1 < 0) {
         if (tp < tc)
-            return p + tp * ray;
+            return po + tp * rayo;
         else
             return std::nullopt;
     }
@@ -324,72 +329,91 @@ std::optional<p3> Cylinder::intersect(const p3 &p, const vec3 &ray) const noexce
         return std::nullopt;
 
     if (t3 < tc)
-        return p + tc * ray;
+        return po + tc * rayo;
 
     if (t1 < t3 && t2 < t3)
         return std::nullopt;
 
-    return p + tp * ray;
+    return po + tp * rayo;
 }
 
-std::optional<p3> Box::intersect(const p3 &o, const vec3 &ray) const noexcept {
+std::optional<p3> Box::intersect(const p3 &po, const vec3 &rayo) const noexcept {
+    const p3 p = transformer_.from_basis(po.vec() - c_).p();
+    const auto ray = transformer_.from_basis(rayo);
     const auto invray = vec3(1. / ray.u, 1. / ray.v, 1. / ray.w);
-    const auto min = c_ - e_ / 2;
-    const auto max = c_ + e_ / 2;
+
+    const auto min = p3() - (e_ / 2);
+    const auto max = p3() + (e_ / 2);
     double tmin, tmax, tymin, tymax, tzmin, tzmax;
+
     if (invray.u >= 0.00001) {
-        tmin = (min.x - o.x) * invray.u;
-        tmax = (max.x - o.x) * invray.u;
+        tmin = (min.x - p.x) * invray.u;
+        tmax = (max.x - p.x) * invray.u;
     } else {
-        tmin = (max.x - o.x) * invray.u;
-        tmax = (min.x - o.x) * invray.u;
+        tmin = (max.x - p.x) * invray.u;
+        tmax = (min.x - p.x) * invray.u;
     }
+
     if (invray.v >= 0.00001) {
-        tymin = (min.y - o.y) * invray.v;
-        tymax = (max.y - o.y) * invray.v;
+        tymin = (min.y - p.y) * invray.v;
+        tymax = (max.y - p.y) * invray.v;
     } else {
-        tymin = (max.y - o.y) * invray.v;
-        tymax = (min.y - o.y) * invray.v;
+        tymin = (max.y - p.y) * invray.v;
+        tymax = (min.y - p.y) * invray.v;
     }
+
     if ((tmin > tymax + 0.0001) || (tmax < tymin - 0.0001))
         return std::nullopt;
+
     if (tmin < tymin) tmin = tymin;
     if (tmax > tymax) tmax = tymax;
+
     if (invray.w >= 0.00001) {
-        tzmin = (min.z - o.z) * invray.w;
-        tzmax = (max.z - o.z) * invray.w;
+        tzmin = (min.z - p.z) * invray.w;
+        tzmax = (max.z - p.z) * invray.w;
     } else {
-        tzmin = (max.z - o.z) * invray.w;
-        tzmax = (min.z - o.z) * invray.w;
+        tzmin = (max.z - p.z) * invray.w;
+        tzmax = (min.z - p.z) * invray.w;
     }
+
     if ((tmin > tzmax + 0.0001) || (tmax < tzmin - 0.0001))
         return std::nullopt;
+
     if (tmin < tzmin) tmin = tzmin;
     if (tmax > tzmax) tmax = tzmax;
+
     if (tmin < 0.00001) {
         if (tmax > 0.00001) {
-            return o + tmax * ray;
+            return po + tmax * rayo;
         }
+
     } else if (tmin > 0.00001) {
-        return o + tmin * ray;
+        return po + tmin * rayo;
     }
+
     return std::nullopt;
 }
 
 std::optional<vec3> Box::norm(const p3 &p) const {
     double epsilon = 0.0001;
-    vec3 v = p - c_;
+    vec3 v = transformer_.from_basis(p - c_);
+
     v = vec3(v.u * v.u, v.v * v.v, v.w * v.w);
+
     double d2 = e_ * e_ / 4;
+
     if (v.u < d2 + epsilon && v.u > d2 - epsilon) {
-        return vec3(-1, 0, 0);
+        return transformer_.to_basis(vec3(-1, 0, 0));
     }
+
     if (v.v < d2 + epsilon && v.v > d2 - epsilon) {
-        return vec3(0, -1, 0);
+        return transformer_.to_basis(vec3(0, -1, 0));
     }
+
     if (v.w < d2 + epsilon && v.w > d2 - epsilon) {
-        return -vec3(0, 0, -1);
+        return -transformer_.to_basis(vec3(0, 0, -1));
     }
+
     return std::nullopt;
 }
 
