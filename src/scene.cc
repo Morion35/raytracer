@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <random>
 
-raytracing::Image raytracing::Scene::compute_image(const unsigned short width, const unsigned short height, const unsigned compute_depth, bool aliasing) {
+raytracing::Image raytracing::Scene::compute_image(const unsigned short width, const unsigned short height, const unsigned compute_depth, bool aliasing, bool dynamic_dof) {
 
     const auto pixels = camera_.get_pixels(width, height, aliasing);
 
@@ -23,32 +23,43 @@ raytracing::Image raytracing::Scene::compute_image(const unsigned short width, c
 #pragma omp parallel for
     for (unsigned i = 0; i < height; ++i) {
         for (unsigned j = 0; j < width; ++j) {
-            rd.seed(i * width + j);
             const auto& pixel = pixels[i][j];
             double r = 0, g = 0, b = 0;
-            unsigned nc = 0;
-            unsigned min = 2;
 
-            color mean = color(r, g, b);
-            p3 src = p3();
-
+            color mean = color();
             unsigned n = pixel.size() * sources.size();
-            color precendent_mean = mean;
-            do {
-                nc++;
-                precendent_mean = mean;
+            if (dynamic_dof) {
+                p3 src = p3();
+                unsigned nc = 0;
+                unsigned min = 2;
+                color precendent_mean = mean;
+                rd.seed(i * width + j);
+                do {
+                    nc++;
+                    precendent_mean = mean;
+                    for (const auto& source : sources) {
+                        src = source + transformer(vec3(unif(rd), unif(rd), 0));
+                        for (const auto& dst : pixel) { // aliasing
+                            auto res = compute_ray(src, (dst - src).normalize(), compute_depth).value_or(color());
+                            r += res.r;
+                            g += res.g;
+                            b += res.b;
+                        }
+                    }
+                    unsigned div = n * nc;
+                    mean = color(r / div, g / div, b / div);
+                } while ((nc < min || mean.diff(precendent_mean) > 1e-5));
+            } else {
                 for (const auto& source : sources) {
-                    src = source + transformer(vec3(unif(rd), unif(rd), 0));
-                    for (const auto& dst : pixel) { // aliasing
-                        auto res = compute_ray(src, (dst - src).normalize(), compute_depth).value_or(color());
+                    for (const auto& dst : pixel) { // antialiasing
+                        auto res = compute_ray(source, (dst - source).normalize(), compute_depth).value_or(color());
                         r += res.r;
                         g += res.g;
                         b += res.b;
                     }
                 }
-                unsigned div = n * nc;
-                mean = color(r / div, g / div, b / div);
-            } while (e && (nc < min || mean.diff(precendent_mean) > 1e-4));
+                mean = color(r / n, g / n, b / n);
+            }
             image.set_pixel(i, j, mean);
         }
 #pragma omp critical
@@ -60,45 +71,44 @@ raytracing::Image raytracing::Scene::compute_image(const unsigned short width, c
     return image;
 }
 
-std::optional<raytracing::vec3> refract(const raytracing::vec3 &I, const raytracing::vec3 &N, const float &Kt)
+std::optional<raytracing::vec3> raytracing::Scene::refract(const raytracing::vec3 &I, raytracing::vec3 norm, float eta)
 {
-    double cosi = I.normalize() * N.normalize();
-    double etai = 1, etat = Kt;
-    raytracing::vec3 n = N;
+    double cos_init = I.normalize() * norm.normalize();
 
-    if (cosi < 0) {
-        cosi = -cosi;
+    if (cos_init < 0) {
+        eta = 1 / eta;
+        cos_init = -cos_init;
     }
     else {
-        std::swap(etai, etat);
-        n = -N;
+        norm = -norm;
     }
 
-    double eta = etai / etat;
-    double k = 1 - eta * eta * (1 - cosi * cosi);
+    double k = 1 - eta * eta * (1 - cos_init * cos_init);
 
     if (k < 0)
         return std::nullopt;
     else
-        return eta * I + (eta * cosi - std::sqrt(k)) * n;
+        return eta * I + (eta * cos_init - std::sqrt(k)) * norm;
 }
 
-double fresnel(const raytracing::vec3 &I, const raytracing::vec3 &N, float eta)
+double raytracing::Scene::fresnel(const raytracing::vec3 &I, const raytracing::vec3 &norm, float eta)
 {
-    double cosi = N.normalize() * I.normalize();
-    float etai = 1, etat = eta;
-    if (cosi > 0) { std::swap(etai, etat); }
-    double sint = etai / etat * std::sqrt(std::max(0., 1 - cosi * cosi));
-    if (sint >= 1) {
-        return 1;
-    }
+    double cos_init = norm.normalize() * I.normalize();
+    double sin_out;
+    if (cos_init > 0)
+        sin_out = std::sqrt(std::max(0., 1 - cos_init * cos_init)) * eta;
     else {
-        double cost = std::sqrt(std::max(0., 1 - sint * sint));
-        cosi = std::fabs(cosi);
-        double Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
-        double Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
-        return (Rs * Rs + Rp * Rp) / 2;
+        sin_out = std::sqrt(std::max(0., 1 - cos_init * cos_init)) / eta;
+        cos_init = -cos_init;
     }
+
+    if (sin_out >= 1)
+        return 1;
+
+    double cos_out = std::sqrt(std::max(0., 1 - sin_out * sin_out));
+    double Rs = (eta * cos_init - cos_out) / (eta * cos_init + cos_out);
+    double Rp = (cos_init - eta * cos_out) / (cos_init + eta * cos_out);
+    return (Rs * Rs + Rp * Rp) / 2;
 }
 
 std::optional<raytracing::color> raytracing::Scene::compute_ray(const raytracing::p3 &s, const raytracing::vec3 &ray, unsigned count) const {
@@ -108,14 +118,15 @@ std::optional<raytracing::color> raytracing::Scene::compute_ray(const raytracing
         auto [cp, n, Kd, Ks, ns, Kt, eta, c] = hit.value();
         auto O = (cp - s).normalize();
 
-        auto res = c * ambiant_;
+        if (O * n > 0) {
+            n = -n;
+        }
+
+        auto res = c * ambiant_ * Kd;
         auto S = O - 2 * (O * n) * n;
 
         for (const auto &light : lights_) {
             auto i = light->intensity(cp, *this);
-
-            if (i == color())
-                continue;
 
             auto L = (light->position() - cp).normalize();
             auto LN = std::abs(n * L);
@@ -153,7 +164,7 @@ std::optional<raytracing::color> raytracing::Scene::compute_ray(const raytracing
                     }
                 }
             }
-            res += reflected * Ks * Kr + refracted * (1 - Kr) * ((Ks) ? Ks : 1);
+            res += reflected * Ks * Kr + refracted * (1 - Kr) * ((Ks != 0) ? Ks : 1);
         }
         return res;
     }

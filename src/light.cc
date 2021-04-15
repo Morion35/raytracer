@@ -9,14 +9,14 @@ raytracing::color raytracing::Point_Light::intensity(const raytracing::p3 &p, co
 
     auto intensity = c_;
     if (!hidden_from_light.empty()) {
-        for (auto [c, Ks] : hidden_from_light) {
-            if (!Ks) {
-                return color();
-            }
-            intensity *= c * Ks;
+        if (std::get<1>(hidden_from_light.front()) == 1) {
+            return color();
+        }
+        for (auto [c, Kd] : hidden_from_light) {
+            intensity -= intensity * Kd + (color(1., 1., 1.) - c) * Kd;
         }
     }
-    return (intensity / p.dist(p_)) * I_;
+    return intensity * (1 - (p_.dist(p) / I_));
 }
 
 raytracing::color raytracing::Square_Light::intensity(const raytracing::p3 &p, const raytracing::SceneType &scene) const {
@@ -53,10 +53,10 @@ raytracing::color raytracing::Square_Light::intensity(const raytracing::p3 &p, c
                     continue;
                 }
                 for (auto [c, Kd] : hidden_from_light) {
-                    intensity -= color(1., 1., 1.) * Kd + (color(1., 1., 1.) - c) * Kd;
+                    intensity -= intensity * Kd + (color(1., 1., 1.) - c) * Kd;
                 }
             }
-            intensity = intensity * ((center_ray.dist(p) / -I_) + 1);
+            intensity = intensity * (1. - (center_ray.dist(p) / I_));
             r += intensity.r;
             g += intensity.g;
             b += intensity.b;
